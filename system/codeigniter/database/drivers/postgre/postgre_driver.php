@@ -2,24 +2,12 @@
 /**
  * CodeIgniter
  *
- * An open source application development framework for PHP 5.2.4 or newer
- *
- * NOTICE OF LICENSE
- * 
- * Licensed under the Open Software License version 3.0
- * 
- * This source file is subject to the Open Software License (OSL 3.0) that is
- * bundled with this package in the files license.txt / license.rst.  It is
- * also available through the world wide web at this URL:
- * http://opensource.org/licenses/OSL-3.0
- * If you did not receive a copy of the license and are unable to obtain it
- * through the world wide web, please send an email to
- * licensing@ellislab.com so we can send you a copy immediately.
+ * An open source application development framework for PHP 5.1.6 or newer
  *
  * @package		CodeIgniter
- * @author		EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2012, EllisLab, Inc. (http://ellislab.com/)
- * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
+ * @author		ExpressionEngine Dev Team
+ * @copyright	Copyright (c) 2008 - 2011, EllisLab, Inc.
+ * @license		http://codeigniter.com/user_guide/license.html
  * @link		http://codeigniter.com
  * @since		Version 1.0
  * @filesource
@@ -37,7 +25,7 @@
  * @package		CodeIgniter
  * @subpackage	Drivers
  * @category	Database
- * @author		EllisLab Dev Team
+ * @author		ExpressionEngine Dev Team
  * @link		http://codeigniter.com/user_guide/database/
  */
 class CI_DB_postgre_driver extends CI_DB {
@@ -149,41 +137,28 @@ class CI_DB_postgre_driver extends CI_DB {
 	/**
 	 * Set client character set
 	 *
-	 * @param       string
-	 * @return      bool
+	 * @access	public
+	 * @param	string
+	 * @param	string
+	 * @return	resource
 	 */
-	protected function _db_set_charset($charset)
+	function db_set_charset($charset, $collation)
 	{
-		return (pg_set_client_encoding($this->conn_id, $charset) === 0);
+		// @todo - add support if needed
+		return TRUE;
 	}
 
 	// --------------------------------------------------------------------
 
 	/**
-	 * Database version number
+	 * Version number query string
 	 *
+	 * @access	public
 	 * @return	string
 	 */
-	public function version()
+	function _version()
 	{
-		if (isset($this->data_cache['version']))
-		{
-			return $this->data_cache['version'];
-		}
-
-		if (($pg_version = pg_version($this->conn_id)) === FALSE)
-		{
-			return FALSE;
-		}
-
-		/* If PHP was compiled with PostgreSQL lib versions earlier
-		 * than 7.4, pg_version() won't return the server version
-		 * and so we'll have to fall back to running a query in
-		 * order to get it.
-		 */
-		return isset($pg_version['server'])
-			? $this->data_cache['version'] = $pg_version['server']
-			: parent::version();
+		return "SELECT version() AS ver";
 	}
 
 	// --------------------------------------------------------------------
@@ -222,12 +197,18 @@ class CI_DB_postgre_driver extends CI_DB {
 	/**
 	 * Begin Transaction
 	 *
+	 * @access	public
 	 * @return	bool
 	 */
-	public function trans_begin($test_mode = FALSE)
+	function trans_begin($test_mode = FALSE)
 	{
+		if ( ! $this->trans_enabled)
+		{
+			return TRUE;
+		}
+
 		// When transactions are nested we only begin/commit/rollback the outermost ones
-		if ( ! $this->trans_enabled OR $this->_trans_depth > 0)
+		if ($this->_trans_depth > 0)
 		{
 			return TRUE;
 		}
@@ -235,9 +216,9 @@ class CI_DB_postgre_driver extends CI_DB {
 		// Reset the transaction failure flag.
 		// If the $test_mode flag is set to TRUE transactions will be rolled back
 		// even if the queries produce a successful result.
-		$this->_trans_failure = ($test_mode === TRUE);
+		$this->_trans_failure = ($test_mode === TRUE) ? TRUE : FALSE;
 
-		return @pg_query($this->conn_id, 'BEGIN');
+		return @pg_exec($this->conn_id, "begin");
 	}
 
 	// --------------------------------------------------------------------
@@ -245,17 +226,23 @@ class CI_DB_postgre_driver extends CI_DB {
 	/**
 	 * Commit Transaction
 	 *
+	 * @access	public
 	 * @return	bool
 	 */
-	public function trans_commit()
+	function trans_commit()
 	{
-		// When transactions are nested we only begin/commit/rollback the outermost ones
-		if ( ! $this->trans_enabled OR $this->_trans_depth > 0)
+		if ( ! $this->trans_enabled)
 		{
 			return TRUE;
 		}
 
-		return @pg_query($this->conn_id, 'COMMIT');
+		// When transactions are nested we only begin/commit/rollback the outermost ones
+		if ($this->_trans_depth > 0)
+		{
+			return TRUE;
+		}
+
+		return @pg_exec($this->conn_id, "commit");
 	}
 
 	// --------------------------------------------------------------------
@@ -263,17 +250,23 @@ class CI_DB_postgre_driver extends CI_DB {
 	/**
 	 * Rollback Transaction
 	 *
+	 * @access	public
 	 * @return	bool
 	 */
-	public function trans_rollback()
+	function trans_rollback()
 	{
-		// When transactions are nested we only begin/commit/rollback the outermost ones
-		if ( ! $this->trans_enabled OR $this->_trans_depth > 0)
+		if ( ! $this->trans_enabled)
 		{
 			return TRUE;
 		}
 
-		return @pg_query($this->conn_id, 'ROLLBACK');
+		// When transactions are nested we only begin/commit/rollback the outermost ones
+		if ($this->_trans_depth > 0)
+		{
+			return TRUE;
+		}
+
+		return @pg_exec($this->conn_id, "rollback");
 	}
 
 	// --------------------------------------------------------------------
@@ -334,7 +327,8 @@ class CI_DB_postgre_driver extends CI_DB {
 	 */
 	function insert_id()
 	{
-		$v = $this->version();
+		$v = $this->_version();
+		$v = $v['server'];
 
 		$table	= func_num_args() > 0 ? func_get_arg(0) : NULL;
 		$column	= func_num_args() > 1 ? func_get_arg(1) : NULL;
@@ -383,7 +377,8 @@ class CI_DB_postgre_driver extends CI_DB {
 			return 0;
 		}
 
-		$query = $this->query($this->_count_string.$this->protect_identifiers('numrows').' FROM '.$this->protect_identifiers($table, TRUE, NULL, FALSE));
+		$query = $this->query($this->_count_string . $this->_protect_identifiers('numrows') . " FROM " . $this->_protect_identifiers($table, TRUE, NULL, FALSE));
+
 		if ($query->num_rows() == 0)
 		{
 			return 0;
@@ -452,16 +447,27 @@ class CI_DB_postgre_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Error
+	 * The error message string
 	 *
-	 * Returns an array containing code and message of the last
-	 * database error that has occured.
-	 *
-	 * @return	array
+	 * @access	private
+	 * @return	string
 	 */
-	public function error()
+	function _error_message()
 	{
-		return array('code' => '', 'message' => pg_last_error($this->conn_id));
+		return pg_last_error($this->conn_id);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * The error message number
+	 *
+	 * @access	private
+	 * @return	integer
+	 */
+	function _error_number()
+	{
+		return '';
 	}
 
 	// --------------------------------------------------------------------
@@ -586,9 +592,15 @@ class CI_DB_postgre_driver extends CI_DB {
 			$valstr[] = $key." = ".$val;
 		}
 
+		$limit = ( ! $limit) ? '' : ' LIMIT '.$limit;
+
+		$orderby = (count($orderby) >= 1)?' ORDER BY '.implode(", ", $orderby):'';
+
 		$sql = "UPDATE ".$table." SET ".implode(', ', $valstr);
 
 		$sql .= ($where != '' AND count($where) >=1) ? " WHERE ".implode(" ", $where) : '';
+
+		$sql .= $orderby.$limit;
 
 		return $sql;
 	}
@@ -640,7 +652,9 @@ class CI_DB_postgre_driver extends CI_DB {
 			$conditions .= implode("\n", $like);
 		}
 
-		return "DELETE FROM ".$table.$conditions;
+		$limit = ( ! $limit) ? '' : ' LIMIT '.$limit;
+
+		return "DELETE FROM ".$table.$conditions.$limit;
 	}
 
 	// --------------------------------------------------------------------
