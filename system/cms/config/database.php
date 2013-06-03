@@ -35,7 +35,7 @@
 $db[PYRO_DEVELOPMENT] = array(
 	'hostname'		=> 	'localhost',
 	'username'		=> 	'root',
-	'password'		=> 	'sfssql_2013?',
+	'password'		=> 	'',
 	'database'		=> 	'sfs_log_galaxy',
 	'dbdriver' 		=> 	'mysql',
 	'dbprefix' 		=>	'',
@@ -68,6 +68,26 @@ $db[PYRO_PRODUCTION] = array(
 	'dbcollat' 		=>	'utf8_unicode_ci',
 	'port' 	 		=>	'3306',
 );
+
+
+//Nav Connectivity
+$db['navcon']['hostname'] = 'ITS3\SQLEXPRESS'; // SFSW2K8R2SRV3\NAV
+$db['navcon']['username'] = ''; //sa
+$db['navcon']['password'] = ''; //1
+$db['navcon']['database'] = 'Cronus';
+$db['navcon']['dbdriver'] = 'sqlsrv';
+$db['navcon']['dbprefix'] = '';
+$db['navcon']['pconnect'] = TRUE;
+$db['navcon']['db_debug'] = TRUE;
+$db['navcon']['cache_on'] = FALSE;
+$db['navcon']['cachedir'] = '';
+$db['navcon']['char_set'] = 'utf8';
+$db['navcon']['dbcollat'] = 'utf8_general_ci';
+$db['navcon']['swap_pre'] = '';
+$db['navcon']['autoinit'] = TRUE;
+$db['navcon']['stricton'] = FALSE;
+
+
 
 
 // Check the configuration group in use exists
