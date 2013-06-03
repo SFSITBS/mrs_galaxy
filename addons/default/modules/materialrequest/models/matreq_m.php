@@ -5,22 +5,36 @@ class Matreq_m extends MY_Model
 	protected $_table = 'material_requests';
 
 
-	public function get_divapproval($division)
-	{
-		return $this->db
-			->select('material_requests.*')
-			->where(array('status'=>2,'division' => $division))
-			->get('material_requests')
-			->result();
-	}
+	
 	public function get_requestor_division($id)
 	{
 		$this->db
 			->select('divisions.*')
 			->where('requestor', $id)
 			->or_where('requestor_proxy',$id);
-
 		return $this->db->get('divisions')->row();
+	}
+	
+	public function is_requisitioner($id)
+	{
+		$this->db->where(array('id' => $id));
+		
+		$user_info = $this->db->get('users')->row();
+		
+		$is_approver = ($user_info->group_id == '6') ? 1 : 0;
+		
+		return $is_approver;
+		
+			
+	}
+	
+	public function get_group_approvers($id)
+	{
+		return $this->db
+			->select('default_division_groups.*')
+			->where('id', $id)
+			->get('default_division_groups')
+			->row();			
 	}
 	
 	public function get_statuses()
@@ -29,6 +43,25 @@ class Matreq_m extends MY_Model
 			->select('material_requests_statuses.*');
 		return $this->db->get('material_requests_statuses')->result();
 	}
+	
+	public function get_status_desc($id)
+	{
+		return $this->db
+			->select('material_requests_statuses.*')
+			->where('id', $id)
+			->get('material_requests_statuses')
+			->row();
+	}
+	
+	public function get_division_group($id)
+	{
+		return $this->db
+			->select('default_division_groups.*')
+			->where('id', $id)
+			->get('default_division_groups')
+			->row();
+	}
+	
 	public function get_mr_items($mr_id)
 	{
 		return $this->db
@@ -36,21 +69,21 @@ class Matreq_m extends MY_Model
 			->where(array('mr_id' => $mr_id))
 			->get('material_requests_items')
 			->result();
-	}
+	}	
+	
 	public function get_all()
 	{
-		//~ $this->db
-			//~ ->select('material_requests.*,  material_requests_statuses.desc')
-			//~ ->join('material_requests_statuses', 'material_requests.status = material_requests_statuses.id', 'left')
-			//~ ->order_by('created', 'DESC');
-//~ 
-		//~ return $this->db->get('material_requests')->result();
-		
 		$this->db
 			->select('material_requests.*');
-
 		return $this->db->get('material_requests')->result();
 		
+	}
+	public function get_all_requested()
+	{
+		$this->db
+			->select('material_requests.*')
+			->where('material_requests.requestor',$this->current_user->id);
+		return $this->db->get('material_requests')->result();
 		
 	}
 
@@ -62,6 +95,26 @@ class Matreq_m extends MY_Model
 			->get('material_requests')
 			->row();
 	}
+	public function get_where($params)
+	{
+		return $this->db
+			->select('material_requests.*')
+			->where($params)
+			->get('material_requests')
+			->result();
+	}
+	public function get_today($id)
+	{
+		return $this->db
+			->select('material_requests.*')
+			->where('submitted > CURDATE( )')
+			->where('submitted < CURDATE( ) + INTERVAL 1 DAY')
+			->where('requestor',$id)
+			->get('material_requests')
+			->result();
+			
+	}	
+	
 	
 	public function get_by($key, $value = '')
 	{
@@ -84,7 +137,8 @@ class Matreq_m extends MY_Model
 	public function get_many_by($params = array())
 	{
 		$this->load->helper('date');
-
+		
+		
 		if (!empty($params['requestor']))
 		{
 			$this->db->where('material_requests.requestor', $params['requestor']);
@@ -95,13 +149,20 @@ class Matreq_m extends MY_Model
 			$this->db->where('material_requests.status', $params['status']);
 		}
 
-		if ( ! empty($params['keywords']))
+		
+		if (!empty($params['date_submitted']))
+		{ 
+		 $this->db
+			->where('material_requests.submitted >= ',$params['date_submitted'])
+			->where('material_requests.submitted < ',$params['date_submitted'].'+ INTERVAL 1 DAY');
+		}
+		
+		if (!empty($params['keywords']))
 		{
 			$this->db
-				->like('material_requests.title', trim($params['keywords']))
-				->or_like('material_requests.narrative', trim($params['keywords']));
+				->having('material_requests.title like \'%'.trim($params['keywords']).'%\' ')
+				->or_having('material_requests.narrative like \'%'.trim($params['keywords']).'%\'');
 		}
-
 		// Is a status set?
 		//~ if (!empty($params['status']))
 		//~ {
@@ -131,6 +192,7 @@ class Matreq_m extends MY_Model
 		elseif (isset($params['limit']))
 			$this->db->limit($params['limit']);
 
+		$this->db->order_by('submitted','desc');
 		return $this->get_all();
 	}
 	

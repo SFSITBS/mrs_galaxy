@@ -82,6 +82,14 @@ class User_m extends MY_Model
 		return parent::get_all();
 	}
 
+	public function get_where($params)
+	{		
+		return $this->db
+			->select('default_users.*')
+			->where($params)
+			->get('default_users')
+			->row();
+	}
 	// --------------------------------------------------------------------------
 
 	/**
@@ -107,6 +115,16 @@ class User_m extends MY_Model
 			'last_login' => now(),
 			'ip' => $this->input->ip_address()
 		));
+	}
+	public function get_group($id)
+	{
+		$this->db->where(array('id' => $id));
+		
+		$user_info = $this->db->get('users')->row();
+		
+		return $user_info->group_id;
+				
+			
 	}
 
 	// --------------------------------------------------------------------------

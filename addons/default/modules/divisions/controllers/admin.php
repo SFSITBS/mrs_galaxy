@@ -60,7 +60,7 @@ class Admin extends Admin_Controller
 	{
 		parent::__construct();
 		
-		$this->load->model(array('divisions_m', 'divgroups/divgroups_m','navigation/navigation_m','users/user_m'));
+		$this->load->model(array('welcome_m','divisions_m', 'divgroups/divgroups_m','navigation/navigation_m','users/user_m'));
 		$this->lang->load('divisions');
 		
 		$this->load->library('form_validation');
@@ -83,6 +83,7 @@ class Admin extends Admin_Controller
 		$pagination = create_pagination('admin/divisions/index', $total_rows, NULL, 4);
 			
 		// Using this data, get the relevant results
+		
 		$divisions = $this->divisions_m->limit($pagination['limit'])->get_all(); //get_all() directly get all rows od db declared in model
 		//$accounting_categories = $this->category_m->get_accounting_categories();	
 		//~ print_r($division_groups);

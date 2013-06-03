@@ -41,6 +41,18 @@ a:visited {}
 a:hover { color: #efa92e; }
 a:focus { outline: 0; }
 
+#blue_alert 
+{
+	color: #3076ce;
+	font-weight: bold;
+	/*background-color: #e5f1ff; */
+}
+#red_alert 
+{
+	color: #ff3e3e;
+	font-weight: bold;
+	/*background-color: #ffc3c3;*/
+}
 /* Improve readability when focused/hovered in all bgridsers */
 a:hover, a:active { outline: 0; }
 
@@ -513,6 +525,7 @@ table .actions a {
  * ---------------------------------- */
 
 /* Buttons */
+
 .btn {
   cursor: pointer;
   display: inline-block;

@@ -280,7 +280,7 @@ class Users extends Public_Controller
 
 				$email = $this->input->post('email');
 				$password = $this->input->post('password');
-
+				$allow_mr_email = $this->input->post('allow_mr_notification');
 				// --------------------------------
 				// Auto-Username
 				// --------------------------------
@@ -346,7 +346,7 @@ class Users extends Public_Controller
 					$user->display_name = $username;
 					$user->email = $email;
 					$user->password = $password;
-
+					$user->allow_notification = $allow_mr_email;
 					// trigger an event for third party devs
 					Events::trigger('post_user_register', $id);
 
@@ -362,6 +362,7 @@ class Users extends Public_Controller
 							'sender_os' => $this->agent->platform(),
 							'slug' => 'registered',
 							'email' => Settings::get('contact_email'),
+							'allow_notification' => $user->allow_notification ,
 						), 'array');
 					}
 
@@ -597,6 +598,8 @@ class Users extends Public_Controller
 	 */
 	public function edit($id = 0)
 	{
+	
+	
 		if ($this->current_user AND $this->current_user->group === 'admin' AND $id > 0)
 		{
 			$user = $this->user_m->get(array('id' => $id));
@@ -608,7 +611,6 @@ class Users extends Public_Controller
 		{
 			$user = $this->current_user or redirect('users/login/users/edit'.(($id > 0) ? '/'.$id : ''));
 		}
-
 		$profile_data = array(); // For our form
 
 		// Get the profile data
@@ -682,7 +684,10 @@ class Users extends Public_Controller
 				$user_data['password'] = $secure_post['password'];
 				unset($secure_post['password']);
 			}
-
+			
+			//if allow notification is being changed
+			$user_data['allow_notification'] = $this->input->post('allow_notification');
+					
 			// --------------------------------
 			// Set the language for this user
 			// --------------------------------
@@ -709,7 +714,8 @@ class Users extends Public_Controller
 			{
 				$this->session->set_flashdata('error', $this->ion_auth->errors());
 			}
-
+				
+		
 			redirect('users/edit'.(($id > 0) ? '/'.$id : ''));
 		}
 		else
@@ -725,7 +731,7 @@ class Users extends Public_Controller
 				$user->email = $_POST['email'];
 			}
 		}
-
+	
 		// --------------------------------
 		// Grab user profile data
 		// --------------------------------
@@ -750,7 +756,7 @@ class Users extends Public_Controller
 		$this->fields->run_field_events($this->streams_m->get_stream_fields($profile_stream_id), array());
 
 		// --------------------------------
-
+		
 		// Render the view
 		$this->template->build('profile/edit', array(
 			'_user' => $user,

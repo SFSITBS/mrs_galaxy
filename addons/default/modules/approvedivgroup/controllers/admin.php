@@ -51,15 +51,17 @@ class Admin extends Admin_Controller
 	{
 		parent::__construct();
 		
-		$this->load->model(array('approvegroup_m','materialrequest/matreq_m','category_m', 'blog_categories_m','approvediv/approvediv_m','users/user_m','items/item_m'));
+		$this->load->model(array('approvegroup_m','audit_trail/audit_trail_m','materialrequest/matreq_m','materialrequest/send_mail_m','category_m', 'blog_categories_m','approvediv/approvediv_m','users/user_m','users/profile_m','items/item_m'));
 		$this->lang->load('approvegroup');
 		
 		$this->load->library('form_validation');
 		$this->form_validation->set_rules($this->validation_rules);
 		$_statuses = $this->matreq_m->get_statuses();
+		$users_division = $this->approvegroup_m->get_approver_group_division($this->current_user->id);	
+		$material_requests = $this->approvegroup_m->get_group_requests($users_division->id);
 	
-		$this->template->set('statuses', $_statuses);
-
+		$this->template->set('statuses', $_statuses)->set('material_requests', $material_requests );
+		
 	}
 
 	/**
@@ -76,7 +78,7 @@ class Admin extends Admin_Controller
 		$this->pyrocache->delete_all('modules_m');
 		if($is_approver == 0)
 		{ 	
-			$this->session->set_flashdata('error', lang('approvediv:user_no_approver'));
+			$this->session->set_flashdata('error', lang('approvegroup:user_no_approver'));
 			redirect('admin');
 		}
 		else
@@ -90,8 +92,27 @@ class Admin extends Admin_Controller
 		$categories = $this->category_m->limit($pagination['limit'])->get_all(); //get_all() directly get all rows od db declared in model
 		$accounting_categories = $this->category_m->get_accounting_categories();	
 		
-		$users_division = $this->approvegroup_m->get_approver_group_division($user_id);		
-		$material_requests = $this->approvegroup_m->get_group_requests($users_division->id);
+		$users_division = $this->approvegroup_m->get_approver_group_division($user_id);	
+		if(!$users_division )
+		{ 	
+			$this->session->set_flashdata('error', lang('approvegroup:user_no_approver'));
+			redirect('admin');
+		}
+		
+		//set the base/default where clause
+		$base_where = array('show_future' => TRUE);
+		
+		//add post values to base_where if f_module is posted
+		if ($this->input->post('f_status') ) 	$base_where['status'] 	= $this->input->post('f_status');
+		if ($this->input->post('f_keywords')) 	$base_where['keywords'] = $this->input->post('f_keywords');
+		if ($this->input->post('f_for_approval')) 	$base_where['for_approval'] = $this->input->post('f_for_approval');
+		
+		$base_where['division'] = $users_division->id;
+		$base_where['for_approval'] = 0;
+		
+		//$material_requests = $this->approvegroup_m->get_group_requests($users_division->id);
+		$material_requests = $this->approvegroup_m->limit($pagination['limit'])->get_many_by($base_where);
+	
 		$mr_status = $this->matreq_m->get_statuses();
 		$users = $this->user_m->get_all();
 	
@@ -121,69 +142,82 @@ class Admin extends Admin_Controller
 
 	//new functions VENNN
 	public function view_mr($id=0)
-	{	// is ID specified
-		$id OR redirect('admin/approvedivgroup');
-		
-		$mr = $this->matreq_m->get($id);
-		// mr exist?
-		$mr OR redirect('admin/approvedivgroup');
-		
-		$mr->status == 3 OR  redirect('admin/approvedivgroup');
-		 
-		 
-		$this->session->set_userdata('mr_id',$id);
-		$this->session->unset_userdata('cart');
-		$mr = $this->matreq_m->get($id);
-		$requestor_info = $this->current_user;
-		$data['mrid']= $this->session->userdata('mr_id');
-		$data['cart']=$this->matreq_m->get_mr_items($this->session->userdata('mr_id'));
-
-		
-		//set the base/default where clause
-		$base_where = array('show_future' => TRUE, 'status' => 'all');
-
-		//add post values to base_where if f_module is posted
-		if ($this->input->post('f_category')) 	$base_where['category'] = $this->input->post('f_category');
-		//if ($this->input->post('f_status')) 	$base_where['status'] 	= $this->input->post('f_status');
-		if ($this->input->post('f_keywords')) 	$base_where['keywords'] = $this->input->post('f_keywords');
-
-		// Create pagination links
-		$total_rows = $this->matreq_m->count_by($base_where);
-		$pagination = create_pagination('admin/materialrequest/add_item_to_mr/', $total_rows);
-
-		// Using this data, get the relevant results
-		$item = $this->matreq_m->limit($pagination['limit'])->get_many_by($base_where);
-		
-		//do we need to unset the layout because the request is ajax?
-		$this->input->is_ajax_request() and $this->template->set_layout(FALSE);
-		$categories = $this->category_m->get_all();		
-		$purposes = $this->category_m->get_accounting_categories();
+	{
+		$is_approver = $this->approvegroup_m->is_division_group_approver($this->current_user->id);
+		if($is_approver == 0)
+		{ 	
+			$this->session->set_flashdata('error', lang('approvegroup:user_no_approver'));
+			redirect('admin');
+		}
+		else
+		{
+			// is ID specified
+			$id OR redirect('admin/approvedivgroup');
 			
-		$this->template
-			->title($this->module_details['name'])
-			->set('pagination', $pagination)
-			->set('categories', $categories)
-			->set('category_m', $this->category_m)
-			->set('data', $data)
-			->set('purposes', $purposes)
-			->set('mr', $mr)
-			->set('items', $item);
+			//get mr
+			$mr = $this->matreq_m->get($id);
+			
+			// mr exist?
+			$mr OR redirect('admin/approvedivgroup');
+			
+			 
+			$this->session->set_userdata('mr_id',$id);
+			$this->session->unset_userdata('cart');
+			$mr = $this->matreq_m->get($id);
+			$requestor_info = $this->current_user;
+			$data['mrid']= $this->session->userdata('mr_id');
+			$data['cart']=$this->matreq_m->get_mr_items($this->session->userdata('mr_id'));
+			$mr_history = $this->audit_trail_m->get_mr_history($this->session->userdata('mr_id'));	
 
-		$this->input->is_ajax_request()
-			? $this->template->build('admin/tables/posts')
-			: $this->template->build('admin/approvedivgroup/view_mr');
+			
+			//set the base/default where clause
+			$base_where = array('show_future' => TRUE, 'status' => 'all');
+
+			//add post values to base_where if f_module is posted
+			if ($this->input->post('f_category')) 	$base_where['category'] = $this->input->post('f_category');
+			//if ($this->input->post('f_status')) 	$base_where['status'] 	= $this->input->post('f_status');
+			if ($this->input->post('f_keywords')) 	$base_where['keywords'] = $this->input->post('f_keywords');
+
+			// Create pagination links
+			$total_rows = $this->matreq_m->count_by($base_where);
+			$pagination = create_pagination('admin/materialrequest/add_item_to_mr/', $total_rows);
+
+			// Using this data, get the relevant results
+			$item = $this->matreq_m->limit($pagination['limit'])->get_many_by($base_where);
+			
+			//do we need to unset the layout because the request is ajax?
+			$this->input->is_ajax_request() and $this->template->set_layout(FALSE);
+			$categories = $this->category_m->get_all();		
+			$purposes = $this->category_m->get_accounting_categories();
+				
+			$this->template
+				->title($this->module_details['name'])
+				->set('pagination', $pagination)
+				->set('categories', $categories)
+				->set('category_m', $this->category_m)
+				->set('data', $data)
+				->set('purposes', $purposes)
+				->set('mr_history', $mr_history)
+				->set('mr', $mr)
+				->set('items', $item);
+
+			$this->input->is_ajax_request()
+				? $this->template->build('admin/tables/posts')
+				: $this->template->build('admin/approvedivgroup/view_mr');
+		}
 
 	}
 	function require_changes($mr_id)
 	{			
 		$mr_id OR redirect('admin/approvedivgroup');
+		
 		// Get the unit			
 		$mr = $this->matreq_m->get($this->session->userdata('mr_id'));
 	
 		// ID specified?
 		$mr or redirect('admin/blog/approvedivgroup/index');
 		
-		if($mr->status == 3)
+		if( $mr->status == 3 || $mr->status == 6 || $mr->status == 7)
 		{			
 			$INPUT = array(
 				'status' 			=> 5,
@@ -191,12 +225,54 @@ class Admin extends Admin_Controller
 				'date_approved' => date("Y-m-d H:i:s"),
 				'remarks'			=> $this->input->post('remarks')
 			);
-			
+			$audit_trail   = array(
+					'relative_id'			=> $mr_id,
+					'action'		=> 3,
+					'created'	=> null,
+					'user_id' 		=> $this->current_user->id,
+					'remarks' =>  $this->input->post('remarks')
+				);	
 				
 			
 			$this->approvegroup_m->update($mr_id, $INPUT)
 				? $this->session->set_flashdata('success', sprintf( lang('category:cat_edit_success'), $this->input->post('cat_name')) )
 				: $this->session->set_flashdata('error', lang('cat_edit_error'));
+		
+			$this->audit_trail_m->insert_to_history($audit_trail);	
+			
+			//*************************
+			//*SEND email notification
+			//***********************	
+				
+			//get details of requisitioner and approvers				
+			$mr->status = 5;
+			
+			$message_approver ="This requisition was returned to the requisitioner.";
+			$message_approver2 ="This requisition was returned to the requisitioner.";
+				
+			$division = $this->matreq_m->get_requestor_division($mr->requestor);
+			$division_group = $this->matreq_m->get_group_approvers($division->division_group);
+			
+			$requisitioner =  $this->user_m->get_where(array('id' =>$mr->requestor));			
+			$group_approver = $this->user_m->get_where(array('id' =>$division_group->approver));
+			$group_approver_proxy = $this->user_m->get_where(array('id' =>$division_group->approver_proxy));			
+			
+			//send to REQUISITIONERS
+			$this->send_mail($mr,'require_changes',$requisitioner,'admin/materialrequest/add_items/','Your requisition requires changes. Please review details.');
+			
+			//send to approver
+			if($group_approver->id == $this->current_user->id)
+				$message_approver ='You have rejected this requisition.'.$message_approver;
+			if($group_approver_proxy->id == $this->current_user->id)
+				$message_approver2 ='You have rejected this requisition.'.$message_approver2;
+							
+			
+			!$group_approver or $this->send_mail($mr,'require_changes',$group_approver,'admin/approvedivgroup/view_mr/',$message_approver);
+			!$group_approver_proxy or $this->send_mail($mr,'require_changes',$group_approver_proxy,'admin/approvedivgroup/view_mr/',$message_approver2);
+		
+			//*****************
+			//******END SEND
+			//**************
 
 		}		
 		redirect('admin/approvedivgroup');
@@ -215,7 +291,8 @@ class Admin extends Admin_Controller
 		// ID specified?
 		$mr or redirect('admin/blog/approvedivgroup/index');
 		
-		if($mr->status == 3)
+		//is mr division or division group approval
+		if( $mr->status == 3 || $mr->status == 6 || $mr->status == 7)
 		{
 			if($stat == 'hold')
 			{
@@ -224,6 +301,20 @@ class Admin extends Admin_Controller
 				'division_group_approver' => $this->current_user->id,
 				'date_approved' => date("Y-m-d H:i:s")
 				);
+				
+				$audit_trail   = array(
+					'relative_id'			=> $mr_id,
+					'action'		=> 2,
+					'created'	=> null,
+					'user_id' 		=> $this->current_user->id,
+					'remarks' => ''
+				);		
+				
+				$slug = 'on_hold';
+				$new_status = 7;
+				$message_approver = 'This requisition has been approved';
+				$message_approver2 = 'This requisition has been approved';
+				$message_requisitioner = 'Your requisition has been put on hold by your division group approver';
 			}				
 			if($stat == 'approve')
 			{
@@ -232,14 +323,95 @@ class Admin extends Admin_Controller
 				'division_group_approver' => $this->current_user->id,
 				'date_approved' => date("Y-m-d H:i:s")
 				);
+				
+				$audit_trail   = array(
+					'relative_id'			=> $mr_id,
+					'action'		=> 4,
+					'created'	=> null,
+					'user_id' 	=> $this->current_user->id,
+					'remarks' => ''
+				);	
+				$slug = 'approved';
+				$new_status = 4;
+				$message_approver = 'This requisition has been approved';
+				$message_approver2 = 'This requisition has been approved';
+				$message_requisitioner = 'Your requisition has been approved by your division group approver';
+			}	
+			if($stat == 'force_approve')
+			{
+				$INPUT = array(
+				'status' 			=> 4,
+				'division_group_approver' => $this->current_user->id,
+				'date_approved' => date("Y-m-d H:i:s")
+				);
+				
+				$audit_trail   = array(
+					'relative_id'			=> $mr_id,
+					'action'		=> 5,
+					'created'	=> null,
+					'user_id' 	=> $this->current_user->id,
+					'remarks' => ''
+				);	
+				$slug = 'approved';
+				$new_status = 4;
+				$message_approver = 'This requisition has been approved';
+				$message_approver2 = 'This requisition has been approved';
+				$message_requisitioner = 'Your requisition has been forced approved by your division group approver';
 			}			
 		
 			$this->approvegroup_m->update($mr_id, $INPUT)
-				? $this->session->set_flashdata('success', sprintf( lang('category:cat_edit_success'), $this->input->post('cat_name')) )
-				: $this->session->set_flashdata('error', lang('cat_edit_error'));
-
+				? $this->session->set_flashdata('success', sprintf( lang('approvegroup:edit_success'), $mr->title)) 
+				: $this->session->set_flashdata('error', lang('approvegroup:edit_error'));
+				
+			$this->audit_trail_m->insert_to_history($audit_trail);	
+			
+			//*************************
+			//*SEND email notification
+			//***********************	
+				
+			//get details of requisitioner and approvers				
+			$mr->status = $new_status;
+			$division = $this->matreq_m->get_requestor_division($mr->requestor);
+			$division_group = $this->matreq_m->get_group_approvers($division->division_group);
+			
+			$requisitioner =  $this->user_m->get_where(array('id' =>$mr->requestor));			
+			$group_approver = $this->user_m->get_where(array('id' =>$division_group->approver));
+			$group_approver_proxy = $this->user_m->get_where(array('id' =>$division_group->approver_proxy));			
+			
+			//send to REQUISITIONERS
+			$this->send_mail($mr,$slug,$requisitioner,'admin/materialrequest/add_items/',$message_requisitioner);
+			
+			//send to approver
+			if($group_approver->id == $this->current_user->id && $stat == 'approve')
+				$message_approver ='You have approved this requisition.';
+			if($group_approver_proxy->id == $this->current_user->id && $stat == 'approve')
+				$message_approver2 ='You have approved this requisition.';
+				if($group_approver->id == $this->current_user->id && $stat == 'force_approve')
+				$message_approver ='You have forced approved this requisition.';
+			if($group_approver_proxy->id == $this->current_user->id && $stat == 'force_approve')
+				$message_approver2 ='You have forced approved this requisition.';			
+			if($group_approver->id == $this->current_user->id && $stat == 'hold')
+				$message_approver ='You have put this requisition on hold.';
+			if($group_approver_proxy->id == $this->current_user->id && $stat == 'hold' )
+				$message_approver2 ='You have put this requisition on hold.';
+				
+			!$group_approver or $this->send_mail($mr,$slug,$group_approver,'admin/approvedivgroup/view_mr/',$message_approver);
+			!$group_approver_proxy or $this->send_mail($mr,$slug,$group_approver_proxy,'admin/approvedivgroup/view_mr/',$message_approver2);
+		
+			//*****************
+			//******END SEND
+			//**************
 		}		
 		redirect('admin/approvedivgroup');
+	}
+	
+	public function send_mail($mr,$slug,$send_to,$link,$message)
+	{
+			//if send mail is allowed amd has email
+			if($send_to->email && $send_to->allow_notification)
+			{
+				$this->send_mail_m->send_mail($slug,$send_to,$mr,$link,$message);								
+			}	
 	}
 	///END VENNNNNNNNNNNNNNNNNNN
 	

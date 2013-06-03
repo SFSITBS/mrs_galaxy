@@ -78,6 +78,49 @@
 			</table>
 			
 			<?php }?>
+			
+			<li>
+		<h4><?php echo lang('approvegroup:mr_history_label'); if($mr_history)
+					{ ?></h4>
+		<table border="0" class="table-list">
+				<thead>
+					<tr>
+					<th ><?php echo lang('approvegroup:mr_history_date_label'); ?></th>
+					<th ><?php echo lang('approvegroup:mr_history_action_label'); ?></th>
+					<th ><?php echo lang('approvegroup:mr_history_user_label'); ?></th>
+					<th ><?php echo lang('approvegroup:mr_history_remarks_label'); ?></th>
+					<th width="100px" ><?php echo " "; ?></th>
+					
+					</tr>
+				</thead>
+				<tbody>
+
+				<?php
+					
+						foreach($mr_history as $hist)
+						{
+						$action = $this->audit_trail_m->get_mr_history_actions($hist->action);							
+						$mr_user = $this->user_m->get(array('id'=>$hist->user_id));
+						
+						?>
+							<input type="hidden" name="item_id" value="<?php echo $hist->id; ?>">
+							<tr>	
+							<td><?php echo $hist->created; ?></td>
+							<td><?php echo $action->description; ?></td>
+							<td><?php  echo $mr_user->username;?></td>
+							<td><?php  echo $hist->remarks;?></td>
+							</tr>
+						<?php
+						}
+					}
+					else
+						{?><div class="no_data"><?php echo lang('approvegroup:no_posts'); }?></div>
+
+			
+				</tbody>
+			</table>
+			
+		</li>
 		<form id="frm" name="frm" action="admin/approvedivgroup/require_changes/<?php echo $mr->id;?>" method="post">
 
 		<h4><?php echo lang('approvegroup:remarks_label'); ?> </h4> 
@@ -87,9 +130,11 @@
 
 		
 		<div class="buttons">
-			<?php echo anchor('admin/approvedivgroup/change_stat/hold', 'Hold', 'class="btn blue"'); ?>	
-			<?php echo anchor('admin/approvedivgroup/change_stat/approve/', 'Approve', 'class="btn blue"'); ?>		
-			<?php $this->load->view('admin/partials/buttons', array('buttons' => array('require_changes','cancel'))); ?>						
+			<?php if($mr->status == 2||$mr->status == 3 ||$mr->status == 6 ||$mr->status == 7)  {echo anchor('admin/approvedivgroup/change_stat/hold', 'Hold', 'class="btn blue"'); ?>			
+			<?php if($mr->status == 2 || $mr->status == 6 ) {echo anchor('admin/approvedivgroup/change_stat/force_approve', 'Force Approve', 'class="btn blue"');} ?>	
+			<?php if($mr->status == 3 || $mr->status == 7 ) {echo anchor('admin/approvedivgroup/change_stat/approve/', 'Approve', 'class="btn blue"');} ?>		
+			<?php $this->load->view('admin/partials/buttons', array('buttons' => array('require_changes')));} ?>	
+ 		<?php $this->load->view('admin/partials/buttons', array('buttons' => array('cancel'))); ?>	
 		</div>
 		</form>
 

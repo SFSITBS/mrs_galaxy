@@ -49,6 +49,16 @@
 				<div class="input">
 					<?php echo form_input('email', $_user->email); ?>
 				</div>
+				<div class="input">
+					<?php  echo form_checkbox(array(
+					'class' => 'select-rule',
+					'name' => 'allow_notification',
+					'value' => true,
+					'checked' =>($_user->allow_notification)
+				)); ?></div>
+			</li>	
+			<li>
+				<?php echo lang('user_allow_notification_label');?>
 			</li>
 		</ul>
 	</fieldset>

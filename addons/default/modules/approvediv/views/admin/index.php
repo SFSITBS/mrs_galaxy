@@ -11,10 +11,10 @@
 		<div id="filter-stage">
 			<?php template_partial('approvediv/index'); ?>
 		</div>
-
-		<div class="table_action_buttons">
+		
+		<!--<div class="table_action_buttons">
 			<?php $this->load->view('admin/partials/buttons', array('buttons' => array('delete', 'publish'))); ?>
-		</div>
+		</div>-->
 
 	<?php echo form_close(); ?>
 

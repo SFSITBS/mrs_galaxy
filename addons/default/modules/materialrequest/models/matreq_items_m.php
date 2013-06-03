@@ -79,6 +79,10 @@ class Matreq_items_m extends MY_Model
 				->like('material_requests.title', trim($params['keywords']))
 				->or_like('material_requests.narrative', trim($params['keywords']));
 		}
+		if (!empty($params['date_submitted']))
+		{
+			$this->db->where('material_requests.submitted', $params['date_submitted']);
+		}
 
 		// Is a status set?
 		//~ if (!empty($params['status']))

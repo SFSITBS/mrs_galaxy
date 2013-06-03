@@ -34,7 +34,15 @@ $(function(){
 				pyro.filter.do_filter(pyro.filter.f_module, form_data);
 			
 			}));
-	
+			//listener for select elements
+			$('input[type="checkbox"]', pyro.filter.$filter_form).on('change', function(){
+
+				//build the form data
+				form_data = pyro.filter.$filter_form.serialize();
+
+				//fire the query
+				pyro.filter.do_filter(pyro.filter.f_module, form_data);
+			});
 			//listener for pagination
 			$('body').on('click', '.pagination a', function(e){
 				e.preventDefault();

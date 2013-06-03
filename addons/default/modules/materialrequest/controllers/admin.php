@@ -58,10 +58,10 @@ class Admin extends Admin_Controller
 	{
 		parent::__construct();
 		
-		$this->load->model(array('matreq_m','matreq_items_m', 'blog_categories_m','categories/category_m','items/item_m'));
+		$this->load->model(array('matreq_m','matreq_items_m','send_mail_m', 'blog_categories_m','categories/category_m','items/item_m','audit_trail/audit_trail_m','users/profile_m','users/user_m','settings/settings_m'));
 		$this->lang->load(array('blog', 'categories','matreq','items/item'));
 		$this->load->library('session');
-		$this->load->library(array('keywords/keywords', 'form_validation','requests'));
+		$this->load->library(array('keywords/keywords', 'form_validation','requests','email'));
 		
 		// Date ranges for select boxes
 		$this->template
@@ -83,11 +83,13 @@ class Admin extends Admin_Controller
 	public function index()
 	{
 		//set the base/default where clause
-		$base_where = array('show_future' => TRUE, 'status' => 'all');
+		$base_where = array('show_future' => TRUE);
 
 		//add post values to base_where if f_module is posted
-		if ($this->input->post('f_status')) 	$base_where['status'] 	= $this->input->post('f_status');
+		if ($this->input->post('f_status') ) 	$base_where['status'] 	= $this->input->post('f_status');
 		if ($this->input->post('f_keywords')) 	$base_where['keywords'] = $this->input->post('f_keywords');
+		//if ($this->input->post('f_date_submitted')) 	$base_where['date_submitted'] = $this->input->post('f_date_submitted');
+		
 		$base_where['requestor'] = $this->current_user->id;
 		$mr_status = $this->matreq_m->get_statuses();
 	
@@ -263,6 +265,7 @@ class Admin extends Admin_Controller
 	
 	public function add_item_to_mr($id=0, $quantity=0)
 	{		
+		$this->session->userdata('mr_id') OR redirect('admin/materialrequest');
 		
 		$data=array();
 		$item_id = $id;
@@ -287,6 +290,8 @@ class Admin extends Admin_Controller
 	
 	function edit_item($line,$quantity)
 	{
+		$this->session->userdata('mr_id') OR redirect('admin/materialrequest');
+		
 		$data= array();
 		
 		//invalid quantity, set to previous quantity
@@ -370,6 +375,8 @@ class Admin extends Admin_Controller
 		$data['mrid']= $this->session->userdata('mr_id');
 		$data['cart']=$this->matreq_m->get_mr_items($this->session->userdata('mr_id'));
 
+		$mr_history = $this->audit_trail_m->get_mr_history($this->session->userdata('mr_id'));				
+		
 		
 		//set the base/default where clause
 		$base_where = array('show_future' => TRUE, 'status' => 'all');
@@ -401,6 +408,7 @@ class Admin extends Admin_Controller
 			->set('data', $data)
 			->set('purposes', $purposes)
 			->set('mr', $mr)
+			->set('mr_history', $mr_history)
 			->set('items', $item);
 
 		$this->input->is_ajax_request()
@@ -556,9 +564,9 @@ class Admin extends Admin_Controller
 				
 	
 	function submit_requisition($mr_id)
-	{
-			
+	{			
 		$mr_id OR redirect('admin/materialrequest');
+		
 		// Get the unit			
 		$mr = $this->matreq_m->get($this->session->userdata('mr_id'));
 	
@@ -569,11 +577,11 @@ class Admin extends Admin_Controller
 		$items = $this->session->userdata('cart');
 			
 		//mr has session items?
-		$items or redirect('admin/materialrequest/add_items/'.$id);
+		$items or redirect('admin/materialrequest/add_items/'.$mr_id);
 		
 		//fetch from db mr items
 		$db_mr_items = $this->matreq_items_m->get($mr_id);
-				
+						
 		
 		if($mr->status == 1 || $mr->status == 5)
 		{
@@ -599,36 +607,67 @@ class Admin extends Admin_Controller
 			$INPUT = array(
 				'status' 			=> 2
 			);
-			
-			//update mr details
-			// if($mr->status == 5)
-			// $INPUT = array(
-				// 'status' 			=> 2,
-				// 'date_needed'					=> $this->input->post('date_needed'),
-				// 'requestor'						=> $this->current_user->id,
-				// 'accounting_cat'				=> $this->input->post('purpose'),
-				// 'title'							=> $this->input->post('title'),
-				// 'narrative'						=> $this->input->post('narrative')
-		
-			// );
-				
+			$audit_trail   = array(
+					'relative_id'			=> $mr_id,
+					'action'		=> 1,
+					'created'	=> null,
+					'user_id' 		=> $this->current_user->id,
+					'remarks' => ''
+			);			
 			
 			$this->matreq_m->update($mr_id, $INPUT)
-				? $this->session->set_flashdata('success', sprintf( lang('category:cat_edit_success'), $this->input->post('cat_name')) )
-				: $this->session->set_flashdata('error', lang('cat_edit_error'));
+				? $this->session->set_flashdata('success', sprintf( lang('matreq:submit_success'), 'Your requisition') )
+				: $this->session->set_flashdata('error', lang('matreq:submit_error'));
 
+			
+			$this->audit_trail_m->insert_to_history($audit_trail);	
+			
+			//*************************
+			//*SEND email notification
+			//***********************	
+			//REQUISITIONERS
+			$this->send_mail($mr,'submitted_for_approval',$this->current_user,'admin/materialrequest/view_mr/','You have submitted this requisition for your division approval.');
+			
+			//get approvers
+			$division = $this->matreq_m->get_requestor_division($this->current_user->id);
+			$approver1 = $this->user_m->get_where(array('id' =>$division->approver));
+			$approver_proxy = $this->user_m->get_where(array('id' =>$division->approver_proxy));
+			
+			//send to APPROVER and proxy
+			!$approver1 or $this->send_mail($mr,'pending_for_approval',$approver1,'admin/approvediv/view_mr/',"This requisition is pending for your approval.");
+			!$approver_proxy or $this->send_mail($mr,'pending_for_approval',$approver_proxy,'admin/approvediv/view_mr/',"This requisition is pending for your approval.");
+			
+			//*****************
+			//******END SEND
+			//**************
 		}
-		
+		$this->session->unset_userdata('mr_id');
 		redirect('admin/materialrequest');
-	
-
 	}
+	
+	
+	public function send_mail($mr,$slug,$send_to,$link,$message)
+	{
+			//if send mail is allowed amd has email
+			if($send_to->email && $send_to->allow_notification)
+			{
+				$this->send_mail_m->send_mail($slug,$send_to,$mr,$link,$message);								
+			}	
+	}
+	
 	
 	public function _check_dateneeded($date)
 	{
+		//within 5 days validation
+		//$this->form_validation->set_message('_check_dateneeded', sprintf(lang('matreq:invalid_date_needed'), lang('global:title')));
+		// if($date < date('Y-m-d', strtotime('+5 days')) && $date != null)
+		// {
+			// return true;
+		// }
 		$this->form_validation->set_message('_check_dateneeded', sprintf(lang('matreq:invalid_date_needed'), lang('global:title')));
-		if($date < date('Y-m-d', strtotime('+5 days')) && $date != null)
-		{return true;
+		if($date < date('Y-m-d', strtotime('+1 days')) && $date != null)
+		{
+			return true;
 		}
 	}
 	// END VEN

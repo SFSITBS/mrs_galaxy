@@ -78,6 +78,49 @@
 			</table>
 			
 			<?php }?>
+			
+		<li>
+		<h4><?php echo lang('approvediv:mr_history_label'); if($mr_history)
+					{ ?></h4>
+		<table border="0" class="table-list">
+				<thead>
+					<tr>
+					<th ><?php echo lang('approvediv:mr_history_date_label'); ?></th>
+					<th ><?php echo lang('approvediv:mr_history_action_label'); ?></th>
+					<th ><?php echo lang('approvediv:mr_history_user_label'); ?></th>
+					<th ><?php echo lang('approvediv:mr_history_remarks_label'); ?></th>
+					
+					</tr>
+				</thead>
+				<tbody>
+
+				<?php
+					
+						foreach($mr_history as $hist)
+						{
+						$action = $this->audit_trail_m->get_mr_history_actions($hist->action);							
+						$mr_user = $this->user_m->get(array('id'=>$hist->user_id));
+						
+						?>
+							<input type="hidden" name="item_id" value="<?php echo $hist->id; ?>">
+							<tr>	
+							<td><?php echo $hist->created; ?></td>
+							<td><?php echo $action->description; ?></td>
+							<td><?php  echo $mr_user->username;?></td>
+							<td><?php  echo $hist->remarks;?></td>
+							</tr>
+						<?php
+						}
+					}
+					else
+						{?><div class="no_data"><?php echo lang('approvediv:no_posts'); }?></div>
+
+				</tbody>
+			</table>
+			
+		</li>	
+			
+			
 		<form id="frm" name="frm" action="admin/approvediv/require_changes/<?php echo $mr->id;?>" method="post">
 
 		<h4><?php echo lang('approvediv:remarks_label'); ?></h4>
@@ -87,9 +130,10 @@
 
 		
 		<div class="buttons">
-			<?php echo anchor('admin/approvediv/change_stat/hold', 'Hold', 'class="btn blue"'); ?>	
+			<?php if($mr->status == 2 || $mr->status == 6) { echo anchor('admin/approvediv/change_stat/hold', 'Hold', 'class="btn blue"'); ?>	
 			<?php echo anchor('admin/approvediv/change_stat/approve/', 'Approve', 'class="btn blue"'); ?>		
-			<?php $this->load->view('admin/partials/buttons', array('buttons' => array('require_changes','cancel'))); ?>						
+			<?php $this->load->view('admin/partials/buttons', array('buttons' => array('require_changes'))); }?>		
+			<?php $this->load->view('admin/partials/buttons', array('buttons' => array('cancel'))); ?>						
 		</div>
 		</form>
 

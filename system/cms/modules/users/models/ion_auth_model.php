@@ -493,7 +493,7 @@ class Ion_auth_model extends CI_Model
 	 * @return bool
 	 * @author Mathew
 	 **/
-	public function register($username, $password, $email, $group_id = null, $additional_data = array(), $group_name = false)
+	public function register($username, $password, $email, $group_id = null, $additional_data = array(), $group_name = false, $allow_notification)
 	{
 		if ($this->identity_column == 'email' && $this->email_check($email))
 		{
@@ -549,7 +549,8 @@ class Ion_auth_model extends CI_Model
 			'ip_address' => $ip_address,
 			'created_on' => now(),
 			'last_login' => now(),
-			'active'     => 1
+			'active'     => 1,
+			'allow_notification' => $allow_notification
 		);
 
 		if ($this->store_salt)

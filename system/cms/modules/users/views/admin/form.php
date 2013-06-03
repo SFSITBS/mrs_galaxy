@@ -59,6 +59,21 @@
 							<?php echo form_password('password', '', 'id="password" autocomplete="off"'); ?>
 						</div>
 					</li>
+					<li >
+						<label for="allow_mr_notification">
+							<?php echo lang('user_allow_notification_label');?>
+						</label>
+						<div class="input">
+							<?php  echo form_checkbox(array(
+							'class' => 'select-rule',
+							'name' => 'allow_notification',
+							'value' => true,
+							'checked' => $member->allow_notification
+						)); ?>
+						</div>
+					</li>
+				
+			</li>
 				</ul>
 			</fieldset>
 		</div>

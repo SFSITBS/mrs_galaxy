@@ -83,7 +83,47 @@
 			</table>
 			
 			<?php }?>
-		
+		<li>
+		<h4><?php echo lang('matreq:mr_history_label'); if($mr_history)					{  ?></h4>
+		<table border="0" class="table-list">
+				<thead>
+					<tr>
+					<th ><?php echo lang('matreq:mr_history_date_label'); ?></th>
+					<th ><?php echo lang('matreq:mr_history_action_label'); ?></th>
+					<th ><?php echo lang('matreq:mr_history_user_label'); ?></th>
+					<th ><?php echo lang('matreq:mr_history_remarks_label'); ?></th>
+					<th width="100px" ><?php echo " "; ?></th>
+					
+					</tr>
+				</thead>
+				<tbody>
+
+				<?php
+					
+						foreach($mr_history as $hist)
+						{
+						$action = $this->audit_trail_m->get_mr_history_actions($hist->action);							
+						$mr_user = $this->user_m->get(array('id'=>$hist->user_id));
+						
+						?>
+							<input type="hidden" name="item_id" value="<?php echo $hist->id; ?>">
+							<tr>	
+							<td><?php echo $hist->created; ?></td>
+							<td><?php echo $action->description; ?></td>
+							<td><?php  echo $mr_user->username?></td>
+							<td><?php  echo $hist->remarks;?></td>
+							</tr>
+						<?php
+						}
+					}
+					else
+						{?><div class="no_data"><?php echo lang('matreq:no_posts'); }?></div>
+
+				
+				</tbody>
+			</table>
+			
+		</li>
 
 </fieldset>
 		<div class="buttons">

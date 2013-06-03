@@ -48,6 +48,11 @@ class Admin extends Admin_Controller
 			'field' => 'display_name',
 			'label' => 'lang:profile_display_name',
 			'rules' => 'required'
+		),
+		array(
+			'field' => 'allow_notification',
+			'label' => 'lang:user_allow_notification_label',
+			'rules' => ''
 		)
 	);
 
@@ -177,6 +182,7 @@ class Admin extends Admin_Controller
 		$username = $this->input->post('username');
 		$group_id = $this->input->post('group_id');
 		$activate = $this->input->post('active');
+		$allow_notification = $this->input->post('allow_notification');
 
 		// Get user profile data. This will be passed to our
 		// streams insert_entry data in the model.
@@ -206,14 +212,14 @@ class Admin extends Admin_Controller
 			$group = $this->group_m->get($group_id);
 
 			// Register the user (they are activated by default if an activation email isn't requested)
-			if ($user_id = $this->ion_auth->register($username, $password, $email, $group_id, $profile_data, $group->name))
+			if ($user_id = $this->ion_auth->register($username, $password, $email, $group_id, $profile_data, $group->name,$allow_notification))
 			{
 				if ($activate === '0')
 				{
 					// admin selected Inactive
 					$this->ion_auth_model->deactivate($user_id);
 				}
-
+			
 				// Fire an event. A new user has been created. 
 				Events::trigger('user_created', $user_id);
 
@@ -237,6 +243,7 @@ class Admin extends Admin_Controller
 			}
 		}
 
+		
 		if ( ! isset($member))
 		{
 			$member = new stdClass();
@@ -322,6 +329,7 @@ class Admin extends Admin_Controller
 			$update_data['active'] = $this->input->post('active');
 			$update_data['username'] = $this->input->post('username');
 			$update_data['group_id'] = $this->input->post('group_id');
+			$update_data['allow_notification'] = $this->input->post('allow_notification');
 
 			if ($update_data['active'] === '2')
 			{
@@ -384,6 +392,7 @@ class Admin extends Admin_Controller
 
 		// Run stream field events
 		$this->fields->run_field_events($this->streams_m->get_stream_fields($this->streams_m->get_stream_id_from_slug('profiles', 'users')));
+
 
 		$this->template
 			->title($this->module_details['name'], sprintf(lang('user_edit_title'), $member->username))

@@ -36,7 +36,7 @@ $db[PYRO_DEVELOPMENT] = array(
 	'hostname'		=> 	'localhost',
 	'username'		=> 	'root',
 	'password'		=> 	'',
-	'database'		=> 	'sfs_log_galaxy',
+	'database'		=> 	'sfs_log',
 	'dbdriver' 		=> 	'mysql',
 	'dbprefix' 		=>	'',
 	'active_r' 		=>	TRUE,
@@ -71,9 +71,9 @@ $db[PYRO_PRODUCTION] = array(
 
 
 //Nav Connectivity
-$db['navcon']['hostname'] = 'ITS3\SQLEXPRESS'; // SFSW2K8R2SRV3\NAV
-$db['navcon']['username'] = ''; //sa
-$db['navcon']['password'] = ''; //1
+$db['navcon']['hostname'] = 'SFSW2K8R2SRV3\NAV'; // SFSW2K8R2SRV3\NAV
+$db['navcon']['username'] = 'sa'; //sa
+$db['navcon']['password'] = '1'; //1
 $db['navcon']['database'] = 'Cronus';
 $db['navcon']['dbdriver'] = 'sqlsrv';
 $db['navcon']['dbprefix'] = '';

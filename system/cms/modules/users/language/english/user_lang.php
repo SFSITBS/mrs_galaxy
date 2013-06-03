@@ -27,6 +27,7 @@ $lang['user_details_label']                    = 'Details';
 $lang['user_first_name_label']                 = 'First Name';
 $lang['user_last_name_label']                  = 'Last Name';
 $lang['user_email_label']                      = 'E-mail';
+$lang['user_allow_notification_label']         = 'Allow e-mail notification for requisitions';
 $lang['user_group_label']                      = 'Group';
 $lang['user_password_label']                   = 'Password';
 $lang['user_password_confirm_label']           = 'Confirm Password';

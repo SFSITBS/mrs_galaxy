@@ -27,35 +27,20 @@ class Approvediv_m extends MY_Model
 	
 	public function get_all()
 	{
-		//~ $this->db
-			//~ ->select('blog.*, blog_categories.title AS category_title, blog_categories.slug AS category_slug, profiles.display_name')
-			//~ ->join('blog_categories', 'blog.category_id = blog_categories.id', 'left')
-			//~ ->join('profiles', 'profiles.user_id = blog.author_id', 'left')
-			//~ ->order_by('created_on', 'DESC');
-	
 		$this->db
-			->select('stockcategory.*')
+			->select('default_material_requests.*')
 			->order_by('id','ASC');
-		return $this->db->get('stockcategory')->result();
-		//~ print_r($this->db->get('stockcategory')->result());
-		//~ die();
+		return $this->db->get('default_material_requests')->result();
 	}
 	
 	
 	public function get_accounting_categories()
 	{
-		//~ $this->db
-			//~ ->select('blog.*, blog_categories.title AS category_title, blog_categories.slug AS category_slug, profiles.display_name')
-			//~ ->join('blog_categories', 'blog.category_id = blog_categories.id', 'left')
-			//~ ->join('profiles', 'profiles.user_id = blog.author_id', 'left')
-			//~ ->order_by('created_on', 'DESC');
-	
+
 		$this->db
 			->select('accounting_category.*')
 			->order_by('id','ASC');
 		return $this->db->get('accounting_category')->result();
-		//~ print_r($this->db->get('stockcategory')->result());
-		//~ die();
 	}
 	
 	
@@ -64,9 +49,9 @@ class Approvediv_m extends MY_Model
 	public function get($id)
 	{
 		return $this->db
-			->select('stockcategory.*')
+			->select('default_material_requests.*')
 			->where(array('id' => $id))
-			->get('stockcategory')
+			->get('default_material_requests')
 			->row();
 	}
 	
@@ -75,6 +60,7 @@ class Approvediv_m extends MY_Model
 		return $this->db
 			->select('divisions.*')
 			->where('approver',$id)
+			->or_where('approver_proxy',$id)
 			->get('divisions')
 			->row();
 	}
@@ -95,9 +81,29 @@ class Approvediv_m extends MY_Model
 	{
 		return $this->db
 			->select('material_requests.*')
-			->where(array('status'=>2,'division' => $division))
+			->where('status !=',1)
+			->where('status !=',5)
+			->where('division' , $division)
 			->get('material_requests')
 			->result();
+	}
+	public function get_approval($division,$status)
+	{
+		if($status=='on hold')
+			return $this->db
+				->select('material_requests.*')
+				->where('status',2)
+				->where('division' , $division)
+				->get('material_requests')
+				->result();	
+		if($status=='for approval')
+			return $this->db
+				->select('material_requests.*')
+				->where('status',6)
+				->where('division' , $division)
+				->get('material_requests')
+				->result();
+		
 	}
 	public function count_category_items($id)
 	{
@@ -136,64 +142,48 @@ class Approvediv_m extends MY_Model
 	public function get_many_by($params = array())
 	{
 		$this->load->helper('date');
-
-		if (!empty($params['category']))
+	
+		if (!empty($params['requestor']))
 		{
-			if (is_numeric($params['category']))
-				$this->db->where('blog_categories.id', $params['category']);
-			else
-				$this->db->where('blog_categories.slug', $params['category']);
+			$this->db->where('material_requests.requestor', $params['requestor']);
 		}
-
-		if (!empty($params['month']))
+		if (!empty($params['division']))
 		{
-			$this->db->where('MONTH(FROM_UNIXTIME(created_on))', $params['month']);
+			$this->db->where('material_requests.division', $params['division']);
 		}
+		
 
-		if (!empty($params['year']))
-		{
-			$this->db->where('YEAR(FROM_UNIXTIME(created_on))', $params['year']);
-		}
-
-		if ( ! empty($params['keywords']))
-		{
-			$this->db
-				->like('blog.title', trim($params['keywords']))
-				->or_like('profiles.display_name', trim($params['keywords']));
-		}
-
-		// Is a status set?
 		if (!empty($params['status']))
 		{
-			// If it's all, then show whatever the status
-			if ($params['status'] != 'all')
-			{
-				// Otherwise, show only the specific status
-				$this->db->where('status', $params['status']);
-			}
+			$this->db->where('material_requests.status', $params['status']);
 		}
 
-		// Nothing mentioned, show live only (general frontend stuff)
-		else
+		if (!empty($params['keywords']))
 		{
-			$this->db->where('status', 'live');
+			$this->db
+				->having('material_requests.title like \'%'.trim($params['keywords']).'%\' ')
+				->or_having('material_requests.narrative like \'%'.trim($params['keywords']).'%\'');
+		}
+		
+		if ($params['for_approval'] == 1)
+		{ 
+		 $this->db
+			->where('material_requests.status',2)
+			->or_where('material_requests.status',6);
 		}
 
-		// By default, dont show future posts
-		if (!isset($params['show_future']) || (isset($params['show_future']) && $params['show_future'] == FALSE))
-		{
-			$this->db->where('created_on <=', now());
-		}
-
+		$this->db->where('material_requests.status != ', 1);
+			
 		// Limit the results based on 1 number or 2 (2nd is offset)
 		if (isset($params['limit']) && is_array($params['limit']))
 			$this->db->limit($params['limit'][0], $params['limit'][1]);
 		elseif (isset($params['limit']))
 			$this->db->limit($params['limit']);
 
+		
+		$this->db->order_by('submitted','desc');
 		return $this->get_all();
 	}
-	
 	public function count_tagged_by($tag, $params)
 	{
 		return $this->select('*')

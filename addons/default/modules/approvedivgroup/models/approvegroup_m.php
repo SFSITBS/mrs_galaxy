@@ -24,6 +24,7 @@ class Approvegroup_m extends MY_Model
 		return $this->db
 			->select('division_groups.*')
 			->where('approver',$id)
+			->or_where('approver_proxy',$id)
 			->get('division_groups')
 			->row();
 	}
@@ -31,9 +32,29 @@ class Approvegroup_m extends MY_Model
 	{
 		return $this->db
 			->select('material_requests.*')
-			->where(array('status'=>3,'division_group' => $division_group))
+			->where('status != ',1)
+			->where('status != ',5)
+			->where('division_group', $division_group)
 			->get('material_requests')
 			->result();
+	}
+	public function get_approval($division,$status)
+	{
+		if($status=='on hold')
+			return $this->db
+				->select('material_requests.*')
+				->where('status',3)
+				->where('division' , $division)
+				->get('material_requests')
+				->result();	
+		if($status=='for approval')
+			return $this->db
+				->select('material_requests.*')
+				->where('status',7)
+				->where('division' , $division)
+				->get('material_requests')
+				->result();
+		
 	}
 	/**
 	 * Insert a new category into the database
@@ -65,9 +86,9 @@ class Approvegroup_m extends MY_Model
 			//~ ->order_by('created_on', 'DESC');
 	
 		$this->db
-			->select('stockcategory.*')
+			->select('default_material_requests.*')
 			->order_by('id','ASC');
-		return $this->db->get('stockcategory')->result();
+		return $this->db->get('default_material_requests')->result();
 		//~ print_r($this->db->get('stockcategory')->result());
 		//~ die();
 	}
@@ -94,9 +115,9 @@ class Approvegroup_m extends MY_Model
 	public function get($id)
 	{
 		return $this->db
-			->select('stockcategory.*')
+			->select('default_material_requests.*')
 			->where(array('id' => $id))
-			->get('stockcategory')
+			->get('default_material_requests')
 			->row();
 	}
 	
@@ -129,61 +150,46 @@ class Approvegroup_m extends MY_Model
 	public function get_many_by($params = array())
 	{
 		$this->load->helper('date');
-
-		if (!empty($params['category']))
+	
+		if (!empty($params['requestor']))
 		{
-			if (is_numeric($params['category']))
-				$this->db->where('blog_categories.id', $params['category']);
-			else
-				$this->db->where('blog_categories.slug', $params['category']);
+			$this->db->where('material_requests.requestor', $params['requestor']);
 		}
-
-		if (!empty($params['month']))
+		if (!empty($params['division']))
 		{
-			$this->db->where('MONTH(FROM_UNIXTIME(created_on))', $params['month']);
+			$this->db->where('material_requests.division_group', $params['division']);
 		}
+		
 
-		if (!empty($params['year']))
-		{
-			$this->db->where('YEAR(FROM_UNIXTIME(created_on))', $params['year']);
-		}
-
-		if ( ! empty($params['keywords']))
-		{
-			$this->db
-				->like('blog.title', trim($params['keywords']))
-				->or_like('profiles.display_name', trim($params['keywords']));
-		}
-
-		// Is a status set?
 		if (!empty($params['status']))
 		{
-			// If it's all, then show whatever the status
-			if ($params['status'] != 'all')
-			{
-				// Otherwise, show only the specific status
-				$this->db->where('status', $params['status']);
-			}
+			$this->db->where('material_requests.status', $params['status']);
 		}
 
-		// Nothing mentioned, show live only (general frontend stuff)
-		else
+		if (!empty($params['keywords']))
 		{
-			$this->db->where('status', 'live');
+			$this->db
+				->having('material_requests.title like \'%'.trim($params['keywords']).'%\' ')
+				->or_having('material_requests.narrative like \'%'.trim($params['keywords']).'%\'');
+		}
+		
+		if ($params['for_approval'] == 1)
+		{ 
+		 $this->db
+			->where('material_requests.status',2)
+			->or_where('material_requests.status',6);
 		}
 
-		// By default, dont show future posts
-		if (!isset($params['show_future']) || (isset($params['show_future']) && $params['show_future'] == FALSE))
-		{
-			$this->db->where('created_on <=', now());
-		}
-
+		$this->db->where('material_requests.status != ', 1);
+			
 		// Limit the results based on 1 number or 2 (2nd is offset)
 		if (isset($params['limit']) && is_array($params['limit']))
 			$this->db->limit($params['limit'][0], $params['limit'][1]);
 		elseif (isset($params['limit']))
 			$this->db->limit($params['limit']);
 
+		
+		$this->db->order_by('submitted','desc');
 		return $this->get_all();
 	}
 	

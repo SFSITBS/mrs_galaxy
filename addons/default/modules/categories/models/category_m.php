@@ -58,7 +58,14 @@ class Category_m extends MY_Model
 		//~ die();
 	}
 	
-	
+	public function get_actng_cat($id)
+	{
+		return $this->db
+			->select('accounting_category.*')
+			->where('id', $id)
+			->get('accounting_category')
+			->row();
+	}
 
 	public function get($id)
 	{

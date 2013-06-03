@@ -2,11 +2,11 @@
 	<table border="0" class="table-list">
 		<thead>
 			<tr>
-				<th width="400px"><?php echo lang('matreq:title_label'); ?></th>
-				<th class="250"><?php echo lang('matreq:status_label'); ?></th>
-				<th class="100"><?php echo lang('matreq:created_on_label'); ?></th>
-				<th><?php echo lang('blog_status_label'); ?></th>
-				<th width="180"></th>
+				<th width="300"><?php echo lang('matreq:title_label'); ?></th>
+				<th class="100"><?php echo lang('matreq:purpose_label'); ?></th>
+				<th class="200"><?php echo lang('matreq:narrative_label'); ?></th>
+				<th class="100"><?php echo lang('matreq:submitted_on_label'); ?></th>
+				<th class="100"><?php echo lang('matreq:status_label'); ?></th>
 			</tr>
 		</thead>
 		<tfoot>
@@ -17,19 +17,23 @@
 			</tr>
 		</tfoot>
 		<tbody>
-			<?php foreach ($material_request as $post) : ?>
-				<tr>
-					<td><?php if($post->status==1 || $post->status==5 ) // draft, require changes
+			<?php foreach ($material_request as $post) { 
+					$purposes = $this->category_m->get_actng_cat($post->accounting_cat); 
+					?>
+					<tr >
+					<td><b><?php if($post->status==1 || $post->status==5 ) // draft, require changes
 					{?> <a href="admin/materialrequest/add_items/<?php echo $post->id; ?>" ><?php }?>
 					
-					<?php if($post->status==2 || $post->status==3  || $post->status==4 ) //for approval
+					<?php if($post->status>1 && $post->status!=5 ) //for approval
 					{?><a href="admin/materialrequest/view_mr/<?php echo $post->id; ?>"><?php }?>
 					
 					
 					<?php echo $post->title; ?>					
-					</a></td>
-					<td class="collapse"><?php if($mr_status){ foreach($mr_status as $mr_stat){ if($post->status==$mr_stat->id){echo $mr_stat->desc;} }}?></td>
-					<td class="collapse"><?php echo $post->created; ?></td>
+					</a></b></td>
+					<td class="collapse"><?php echo $purposes->name; ?></td>
+					<td class="collapse"><?php echo $post->narrative; ?></td>
+					<td class="collapse"><?php echo date('Y-m-d h:i:s a', strtotime($post->submitted)); ?></td>
+					<td class="collapse"><i><?php if($mr_status){ foreach($mr_status as $mr_stat){ if($post->status==$mr_stat->id){echo $mr_stat->desc;} }}?></i></td>
 					<td class="collapse">
 					<?php //if (isset($post->display_name)): ?>
 						<?php //echo anchor('user/' . $post->author_id, $post->display_name, 'target="_blank"'); ?>
@@ -49,9 +53,9 @@
 						<?php //echo anchor('admin/blog/delete/' . $post->id, lang('global:delete'), array('class'=>'confirm btn red delete')); ?>
 					</td>
 				</tr>
-			<?php endforeach; ?>
+			<?php } ?>
 		</tbody>
 	</table>
 <?php  else: ?>
-	<div class="no_data"><?php echo lang('blog:currently_no_posts'); ?></div>
+	<div class="no_data"><?php echo lang('matreq:no_requisition'); ?></div>
 <?php endif; ?>

@@ -13,8 +13,10 @@ class Admin extends Admin_Controller
 	public function __construct()
 	{
 		parent::__construct();
-
+		$this->load->model(array('approvedivgroup/approvegroup_m','approvediv/approvediv_m','materialrequest/matreq_m','materialrequest/matreq_items_m', 'categories/category_m','items/item_m','audit_trail/audit_trail_m','users/user_m','users/profile_m'));
+	
 		$this->load->helper('users/user');
+		$this->lang->load('mrs');
 	}
 
 	/**
@@ -31,9 +33,72 @@ class Admin extends Admin_Controller
 			$this->template
 				->set('messages', array('notice' => lang('cp_delete_installer_message')));
 		}
-
-		$this->template
-			->build('admin/dashboard');
+		
+		//REQUISITIONER		
+		$group_id  = $this->user_m->get_group($this->current_user->id);
+		
+		switch ($group_id) 
+		{
+		
+			case 6:
+				//REQUISITIONER
+				$material_request = $this->matreq_m->get_today($this->current_user->id);						
+				$news_feeds = $this->audit_trail_m->get_all_history();	
+				$material_req = $this->matreq_m->get_where(array('requestor'=>$this->current_user->id));
+				$this->template
+				->set('material_request', $material_request)
+				->set('news_feeds', $news_feeds)
+				->set('material_req', $material_req)
+				->build('admin/dashboard_requisitioner');
+				break;
+				
+			case 8:
+				//DIVISION APPROVER
+				$users_division = $this->approvediv_m->get_approver_division($this->current_user->id);		
+				$mr_approval = $this->approvediv_m->get_approval($users_division->id,'on hold');	
+				$mr_on_hold = $this->approvediv_m->get_approval($users_division->id,'for approval');				
+				$news_feeds = $this->audit_trail_m->get_all_history();	
+				$material_req = $this->matreq_m->get_where(array('division'=>$users_division->id));
+				
+				$this->template
+				->set('mr_approval', $mr_approval)
+				->set('mr_on_hold', $mr_on_hold )
+				->set('news_feeds', $news_feeds)
+				->set('material_req', $material_req)
+				->build('admin/dashboard_divapprover');
+				break;
+				
+			case 10:
+				//DIVISION GROUP APPROVER
+				$users_division = $this->approvegroup_m->get_approver_group_division($this->current_user->id);	
+				$mr_approval = $this->approvegroup_m->get_approval($users_division->id,'on hold');	
+				$mr_on_hold = $this->approvegroup_m->get_approval($users_division->id,'for approval');		
+				$news_feeds = $this->audit_trail_m->get_all_history();	
+				$material_req = $this->matreq_m->get_where(array('division_group'=>$users_division->id));
+				
+				$this->template
+				->set('mr_approval', $mr_approval)
+				->set('mr_on_hold', $mr_on_hold )
+				->set('news_feeds', $news_feeds)
+				->set('material_req', $material_req)
+				->build('admin/dashboard_divgroup_approver');
+				break;
+				
+			case 13:
+				//SPECIAL APPROVER				
+				$news_feeds = $this->audit_trail_m->get_all_history();				
+				$this->template
+				->set('news_feeds', $news_feeds)
+				->build('admin/dashboard_special_approver');
+				break;
+			default:
+			$this->template
+				->build('dashboard');
+		}
+		
+		
+	
+			
 	}
 
 	/**

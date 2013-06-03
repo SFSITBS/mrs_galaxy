@@ -22,6 +22,28 @@ class Settings_m extends MY_Model {
 	 * @param	mixed	$where
 	 * @return	object
 	 */
+	 
+	public function get_email_config()
+	{
+		return  Array(
+				'protocol'  => 'smtp',
+				'smtp_host' => 'ssl://smtp.googlemail.com',
+				'smtp_port' => 465,
+				'smtp_user' => 'sfs.webdevelopment@gmail.com',
+				'smtp_pass' => 'sfswebdev',
+				'mailtype'  => 'html',
+				'smtp_timeout' => '30',
+				'charset' => 'utf-8',
+				'starttls'  => true,
+				'newline'   => "\r\n"
+			);
+	}
+	public function get_email_content()
+	{
+		return  Array(
+		);
+	}
+	
 	public function get($where)
 	{
 		if ( ! is_array($where))

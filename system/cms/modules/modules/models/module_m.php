@@ -19,6 +19,7 @@ class Module_m extends MY_Model
 	 * @param	string	$module		The name of the module to load
 	 * @return	array
 	 */
+	
 	public function get($slug = '')
 	{
 		// Have to return an associative array of NULL values for backwards compatibility.

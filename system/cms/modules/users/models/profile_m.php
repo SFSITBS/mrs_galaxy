@@ -19,6 +19,7 @@ class Profile_m extends MY_Model
 		return $query->row();
 	}
 	
+	
 	/**
 	 * Update a user's profile
 	 *

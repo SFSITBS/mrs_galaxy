@@ -8,9 +8,17 @@ $lang['matreq:title_label']                   = 'Request Title';
 $lang['matreq:status_label']                  = 'Status';
 $lang['matreq:created_on_label']              = 'Created on';
 $lang['matreq:created_by_label']              = 'Created by';
+$lang['matreq:submitted_on_label']            = 'Submitted On';
 $lang['matreq:narrative_label']               = 'Narrative';
 $lang['matreq:purpose_label']                 = 'Purpose';
 $lang['matreq:date_needed_label']             = 'Date Needed';
+
+
+$lang['matreq:mr_history_label']                 = 'Requisition History';
+$lang['matreq:mr_history_action_label']          = 'Action';
+$lang['matreq:mr_history_user_label']           =  'Last Updated By';
+$lang['matreq:mr_history_date_label']           =  'Date';
+$lang['matreq:mr_history_remarks_label']           =  'Remarks';
 
 $lang['matreq:posted_label']                   = 'Posted';
 $lang['matreq:posted_label_alt']               = 'Posted at';
@@ -21,6 +29,8 @@ $lang['matreq:tagged_label']					= 'Tagged';
 $lang['matreq:category_label']                 = 'Category';
 $lang['matreq:post_label']                     = 'Post';
 $lang['matreq:date_label']                     = 'Date';
+$lang['matreq:date_from_label']                     = 'Date From';
+$lang['matreq:date_to_label']                     = 'To';
 $lang['matreq:date_at']                        = 'at';
 $lang['matreq:time_label']                     = 'Time';
 $lang['matreq:status_label']                   = 'Status';
@@ -53,13 +63,17 @@ $lang['matreq:list_title']					= 'List Posts';
 
 // messages
 $lang['matreq:no_items_selected']           	= 'There are no items in the request.';
-$lang['matreq:no_posts']                    	= 'There are no posts.';
+$lang['matreq:no_posts']                    	= 'There are no recorded history for this requisition.';
 $lang['matreq:subscripe_to_rss_desc']          = 'Get posts straight away by subscribing to our RSS feed. You can do this via most popular e-mail clients, or try <a href="http://reader.google.co.uk/">Google Reader</a>.';
 $lang['matreq:currently_no_posts']          	= 'There are no posts at the moment.';
+$lang['matreq:no_requisition']          	= 'No requisitions found.';
 $lang['matreq:request_add_success']            	= 'The Material Request has been saved';
 $lang['matreq:request_add_error']              = 'An error occured.';
 $lang['matreq:invalid_requestor']              = 'You can only create request once you are assigned to a division. Please contact the System Administrator about this issue.';
-$lang['matreq:invalid_date_needed']            = 'Date needed must be at least 5 days later than this day.';
+$lang['matreq:invalid_date_needed']            = 'Date needed must be later than this day.';
+$lang['matreq:invalid_date_needed_fivedays']   = 'Date needed must be at least 5 days later than this day.';
+$lang['matreq:submit_success']                 = ' %s has been submitted for division approval.';
+$lang['matreq:submit_error']                   = 'An error occurred while submitting %s .';
 $lang['matreq:edit_success']                   = 'The post "%s" was updated.';
 $lang['matreq:edit_error']                     = 'An error occurred.';
 $lang['matreq:error_adding_item']              = 'Error adding item';
