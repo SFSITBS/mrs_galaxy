@@ -5,40 +5,49 @@ $lang['canvassing:posts']                   = 'Posts';
 
 // labels
 
-$lang['canvassing:title_label']                  		 = 'List of Products to be assigned';
-$lang['canvassing:assign_label']                  		 = 'Assign this item';
+$lang['canvassing:item_assign_label']                   = 'Assign Items';
+$lang['canvassing:category_assign_label']               = 'Assign Category to Purchasing Officer';
+$lang['canvassing:title_label']                  		= 'List of Products to be assigned';
+$lang['canvassing:canvass_label']                  		= 'Canvass Details';
+$lang['canvassing:new_canvass_label']                  	= 'New Canvass';
+$lang['canvassing:history_label']                  		= 'Canvass History';
 
-$lang['canvassing:pr_no_label']                  		 = 'PR No';
-$lang['canvassing:item_description_label']              = 'Item Description';
-$lang['canvassing:date_created_label']                	 = 'Date Created';
+$lang['canvassing:pr_no_label']                  		= 'PR No';
+$lang['canvassing:item_description_label']             	= 'Item Description';
+$lang['canvassing:date_created_label']                	= 'Date Created';
+$lang['canvassing:quantity_label']                	 	= 'Quantity';
+$lang['canvassing:unit_price_label']                	= 'Unit Price';
+$lang['canvassing:total_price_label']               	= 'Total Price';
+$lang['canvassing:unit_label']                	 		= 'Unit';
+$lang['canvassing:supplier_label']                	 	= 'Supplier';
+$lang['canvassing:remarks_label']                	 	= 'Remarks';
 
-$lang['canvassing:requestor_label']            		 = 'MR Requestor';
+$lang['canvassing:requestor_label']            		 	= 'MR Requestor';
 $lang['canvassing:requestor_division_label']            = 'Division';
 $lang['canvassing:requestor_division_group_label']      = 'Division Group';
-$lang['canvassing:quantity_label']      				 = 'Quantity';
-$lang['canvassing:price_label']      				 = 'Price';
-$lang['canvassing:supplier_label']      				 = 'Supplier';
+$lang['canvassing:assign_to_label']      				= 'Assign To';
 
 $lang['canvassing:item_keywords_label']                 = 'Item Keywords';
-$lang['canvassing:unassigned_items_label']                 = 'View unassigned items only';
+$lang['canvassing:category_label']                		= 'Category';
+$lang['canvassing:unassigned_items_label']              = 'View unassigned items only';
 
-$lang['canvassing:mr_history_label']                 = 'Requisition History';
-$lang['canvassing:mr_history_action_label']          = 'Action';
-$lang['canvassing:mr_history_user_label']           =  'Last Updated By';
-$lang['canvassing:mr_history_date_label']           =  'Date';
-$lang['canvassing:mr_history_remarks_label']           =  'Remarks';
+$lang['canvassing:category_label']                 		= 'Category';
+$lang['canvassing:category_code_label']                	= 'Category Code';
+$lang['canvassing:category_description_label']         	= 'Category Description';
+$lang['canvassing:purchasing_officer_label']          	= 'Purchasing Officer';
 
 
-$lang['canvassing:assign_success_label']           =  'Item \'%s\' is succesfully assigned to \'%s\'' ;
-$lang['canvassing:assign_error_label']           =  'Error assigning \'%s\' to %s';
+$lang['canvassing:canvass_success_label']           	=  'New canvass added' ;
+$lang['canvassing:canvass_error_label']           		=  'Error adding new entry for canvass';
+$lang['canvassing:canvass_exist_label']           		=  'Canvass with the selected supplier already exist.';
 
-$lang['canvassing:cat_items_count_label']				 = 'No of Items';
+$lang['canvassing:cat_items_count_label']				= 'No of Items';
 //~ $lang['canvassing:cat_accountingcat_label']		 = 'Accounting approvegroup';
-$lang['canvassing:author_unknown']				= 'Unknown';
-$lang['canvassing:keywords_label']				= 'Keywords';
+$lang['canvassing:author_unknown']					= 'Unknown';
+$lang['canvassing:keywords_label']					= 'Keywords';
 $lang['canvassing:tagged_label']					= 'Tagged';
-$lang['canvassing:approvegroup_label']                 = 'approvegroup';
-$lang['canvassing:for_approval_label']                 = 'For My Approval Only';
+$lang['canvassing:approvegroup_label']              = 'approvegroup';
+$lang['canvassing:for_approval_label']              = 'For My Approval Only';
 $lang['canvassing:post_label']                     = 'Post';
 $lang['canvassing:date_label']                     = 'Date';
 $lang['canvassing:date_at']                        = 'at';
@@ -76,10 +85,13 @@ $lang['canvassing:all_request_title']				= 'Material Requests';
 $lang['canvassing:list_title']					= 'List Posts';
 
 // messages
+$lang['canvassing:no_items']                    = 'There are no items listed.';
+$lang['canvassing:assign_error']                 = 'Error assigning selected purchasing officer to category.';
+$lang['canvassing:no_category_assigned']        = 'There are no categories assigned.';
 $lang['canvassing:no_posts']                    = 'There are no recorded history for this requisition.';
-$lang['canvassing:no_pending']                    = 'There are no requisitions pending for your approval.';
-$lang['canvassing:no_requisition']                    = 'No requisitions found.';
-$lang['canvassing:subscripe_to_rss_desc']          = 'Get posts straight away by subscribing to our RSS feed. You can do this via most popular e-mail clients, or try <a href="http://reader.google.co.uk/">Google Reader</a>.';
+$lang['canvassing:no_pending']                  = 'There are no requisitions pending for your approval.';
+$lang['canvassing:no_requisition']              = 'No requisitions found.';
+$lang['canvassing:subscripe_to_rss_desc']       = 'Get posts straight away by subscribing to our RSS feed. You can do this via most popular e-mail clients, or try <a href="http://reader.google.co.uk/">Google Reader</a>.';
 $lang['canvassing:currently_no_posts']          = 'There are no posts at the moment.';
 $lang['canvassing:post_add_success']            = 'The post "%s" was added.';
 $lang['canvassing:post_add_error']              = 'An error occured.';

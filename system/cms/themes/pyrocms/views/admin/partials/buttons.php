@@ -46,6 +46,8 @@
 			case 'approve':;
 			case 'publish':
 			case 'save':
+			case 'add_new_canvass':
+			case 'assign':
 			case 'save_exit':
 			case 'save_then_add_items':
 			case 'save_draft':
@@ -74,6 +76,7 @@
 			
 			case 'cancel':
 			case 'close':
+			case 'back':
 			case 'preview':
 				if($btn_class == 'btn') $btn_class .= ' gray';
 				$uri = 'admin/' . $this->module_details['slug'];

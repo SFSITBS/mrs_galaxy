@@ -2,11 +2,8 @@
 
 class canvassing_m extends MY_Model
 {
-	protected $_table = 'default_purchase_request_items';
+	protected $_table = 'default_canvassed_items';
 
-	
-	
-	
 	public function is_purchasing($id)
 	{
 		$this->db->where(array('id' => $id));
@@ -20,24 +17,15 @@ class canvassing_m extends MY_Model
 			
 	}
 
-	public function get_purchasing_officer()
-	{
-		return $this->db->select('*')	
-			->where('group_id',5)
-			->get('default_users')
-			->result();
-	}
-	
-
 	public function insert($input = array())
 	{
 		parent::insert(array(
-			//~ 'title'=>$input['title'],
-			//~ 'slug'=>url_title(strtolower(convert_accented_characters($input['title'])))
-			'description' 			=> $input['description'],
-			'is_stocking' 			=> $input['is_stocking'],
-			'category_code' 		=> $input['category_code'],
-			'cat_name' 					=> $input['cat_name']
+				'pr_item_id' 		=> $input['pr_item_id'],
+				'supplier' 		=> $input['supplier'],
+				'unit_price' 		=> $input['unit_price'],
+				'total_price' 		=> $input['total_price'],
+				'quantity' 		=> $input['quantity'],
+				'remarks' 		=> $input['remarks']
 		));
 		
 		return $this->db->insert_id();
@@ -79,10 +67,54 @@ class canvassing_m extends MY_Model
 			->result();
 		
 	}
+	
+	public function get_canvassed_items($params)
+	{
+		return	$this->db
+					->get('default_canvassed_items')
+			->result();
+	}
+	
+	public function get_where_canvassed_items($params)
+	{
+		return	$this->db->where($params)
+					->get('default_canvassed_items')
+			->row();
+	}
+	
 	public function get_all_search()
 	{
 		return	$this->db
-		->select('*')
+		->select('default_purchase_request_items.id as pri_id')
+		->select('default_purchase_request_items.pr_id as pri_pr_id')
+		->select('default_purchase_request_items.item_code as pri_item_code')
+		->select('default_purchase_request_items.is_new as pri_is_new')
+		->select('default_purchase_request_items.canvassed_by as pri_canvassed_by')
+		->select('default_purchase_request.id as pr_id')
+		->select('default_purchase_request.status as pr_status')
+		->select('default_purchase_request.date_created as pr_date_created')
+		->select('default_purchase_request.created_by as pr_created_by')
+		->select('default_material_requests.id as mr_id, ')
+		->select('default_material_requests.title as mr_title, ')
+		->select('default_material_requests.narrative as mr_narrative, ')
+		->select('default_material_requests.division as mr_division, ')
+		->select('default_material_requests.division_group as mr_division_group, ')
+		->select('default_material_requests.created as mr_created, ')
+		->select('default_material_requests.submitted as mr_submitted, ')
+		->select('default_material_requests.date_needed as mr_date_needed, ')
+		->select('default_material_requests.requestor as mr_requestor, ')
+		->select('default_material_requests.division_approver as mr_division_approver, ')
+		->select('default_material_requests.division_group_approver as mr_division_group_approver, ')
+		->select('default_material_requests.force_approved as mr_force_approved, ')
+		->select('default_material_requests.date_approved as mr_date_approved, ')
+		->select('default_material_requests.status as mr_status, ')
+		->select('default_material_requests.accounting_cat as mr_accounting_cat, ')
+		->select('default_material_requests.remarks as mr_remarks, ')
+		->select('default_division_groups.id as dg_id')
+		->select('default_division_groups.division_group_name as dg_division_group_name')
+		->select('default_division_groups.approver as dg_approver')
+		->select('default_division_groups.approver_proxy as dg_approver_proxy')
+		->select('default_division_groups.company as dg_company')
 		->from('default_purchase_request_items')
 		->join('default_purchase_request','default_purchase_request.id = default_purchase_request_items.pr_id')
 		->join('default_material_requests','default_material_requests.id = default_purchase_request.mr_id')
@@ -100,11 +132,16 @@ class canvassing_m extends MY_Model
 					->get('default_purchase_request')
 			->row();
 	}
+	
+	
 
 	public function get_many_by($params = array())
 	{
 		$this->load->helper('date');
+		
 		$this->db->where('canvassed_by',$this->current_user->id);
+		
+		$this->load->helper('date');
 		
 		if (!empty($params['division_group']))
 		{
@@ -112,11 +149,10 @@ class canvassing_m extends MY_Model
 		}
 		if (!empty($params['keywords']))
 		{
-			$this->db->where('item_id',$this->prod_assign_nav_m->get_descriptions($params['keywords']));
-		}
-		if (!empty($params['assigned']))
-		{
-			$this->db->having('canvassed_by is null')->or_having('canvassed_by = \'\'');
+			$itemcode= $this->prod_assign_nav_m->get_descriptions(array('LOWER(Description)'=>strtolower($params['keywords'])));
+			$itemcode_no = '';
+			if($itemcode) $itemcode_no = $itemcode->No_;
+			$this->db->where('item_code',$itemcode_no);
 		}
 		
 		// Limit the results based on 1 number or 2 (2nd is offset)
@@ -126,6 +162,13 @@ class canvassing_m extends MY_Model
 			$this->db->limit($params['limit']);
 		
 		return $this->get_all_search();
+	}
+	public function count_all()
+	{
+		return	
+			$this->db
+					->get('default_purchase_request')
+			->num_rows();
 	}
 	
 	public function count_tagged_by($tag, $params)
@@ -209,6 +252,11 @@ class canvassing_m extends MY_Model
 		//$input['updated_on'] = now();
         //if($input['status'] == "live" and $input['preview_hash'] !='') $input['preview_hash'] = '';
 		return parent::update($id, $input);
+	}
+	
+	public function delete_entry($id)
+	{
+		$this->db->delete('default_canvassed_items', array('canvass_id' => $id)); 
 	}
 
 

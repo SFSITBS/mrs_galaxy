@@ -5,6 +5,8 @@ $lang['prod_assign:posts']                   = 'Posts';
 
 // labels
 
+$lang['prod_assign:item_assign_label']                   = 'Assign Items';
+$lang['prod_assign:category_assign_label']               = 'Assign Category to Purchasing Officer';
 $lang['prod_assign:title_label']                  		 = 'List of Products to be assigned';
 $lang['prod_assign:assign_label']                  		 = 'Assign this item';
 
@@ -18,13 +20,13 @@ $lang['prod_assign:requestor_division_group_label']      = 'Division Group';
 $lang['prod_assign:assign_to_label']      				 = 'Assign To';
 
 $lang['prod_assign:item_keywords_label']                 = 'Item Keywords';
-$lang['prod_assign:unassigned_items_label']                 = 'View unassigned items only';
+$lang['prod_assign:category_label']                		 = 'Category';
+$lang['prod_assign:unassigned_items_label']              = 'View unassigned items only';
 
-$lang['prod_assign:mr_history_label']                 = 'Requisition History';
-$lang['prod_assign:mr_history_action_label']          = 'Action';
-$lang['prod_assign:mr_history_user_label']           =  'Last Updated By';
-$lang['prod_assign:mr_history_date_label']           =  'Date';
-$lang['prod_assign:mr_history_remarks_label']           =  'Remarks';
+$lang['prod_assign:category_label']                 	= 'Category';
+$lang['prod_assign:category_code_label']                = 'Category Code';
+$lang['prod_assign:category_description_label']                 	= 'Category Description';
+$lang['prod_assign:purchasing_officer_label']          	= 'Purchasing Officer';
 
 
 $lang['prod_assign:assign_success_label']           =  'Item \'%s\' is succesfully assigned to \'%s\'' ;
@@ -74,10 +76,13 @@ $lang['prod_assign:all_request_title']				= 'Material Requests';
 $lang['prod_assign:list_title']					= 'List Posts';
 
 // messages
+$lang['prod_assign:no_items']                    = 'There are no items listed.';
+$lang['prod_assign:assign_error']                 = 'Error assigning selected purchasing officer to category.';
+$lang['prod_assign:no_category_assigned']        = 'There are no categories assigned.';
 $lang['prod_assign:no_posts']                    = 'There are no recorded history for this requisition.';
-$lang['prod_assign:no_pending']                    = 'There are no requisitions pending for your approval.';
-$lang['prod_assign:no_requisition']                    = 'No requisitions found.';
-$lang['prod_assign:subscripe_to_rss_desc']          = 'Get posts straight away by subscribing to our RSS feed. You can do this via most popular e-mail clients, or try <a href="http://reader.google.co.uk/">Google Reader</a>.';
+$lang['prod_assign:no_pending']                  = 'There are no requisitions pending for your approval.';
+$lang['prod_assign:no_requisition']              = 'No requisitions found.';
+$lang['prod_assign:subscripe_to_rss_desc']       = 'Get posts straight away by subscribing to our RSS feed. You can do this via most popular e-mail clients, or try <a href="http://reader.google.co.uk/">Google Reader</a>.';
 $lang['prod_assign:currently_no_posts']          = 'There are no posts at the moment.';
 $lang['prod_assign:post_add_success']            = 'The post "%s" was added.';
 $lang['prod_assign:post_add_error']              = 'An error occured.';

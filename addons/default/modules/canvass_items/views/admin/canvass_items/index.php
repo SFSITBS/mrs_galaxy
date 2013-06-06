@@ -1,4 +1,4 @@
-<?php if ($purchase_request_items): ?>
+<?php 	$purchasing_request_items= $this->canvassing_m->get_where(array('canvassed_by'=>$this->current_user->id)); if ($purchase_request_items): ?>
 		<table border="0" class="table-list">
 			<thead>
 			<tr>
@@ -18,21 +18,24 @@
 			</tfoot>
 			<tbody>
 				<?php 
+				
 				foreach($purchase_request_items as $pr_items)
 				{  
 					$relative_pr = $this->prod_assign_m->get_pr($pr_items->pr_id);
 					$mr = $this->matreq_m->get($relative_pr->mr_id);
 					$requestor = $this->profile_m->get_profile(array('user_id'=>$mr->requestor));
 					$division_group = $this->divgroups_m->get($mr->division_group);	
-					$item =  $this->prod_assign_nav_m->get(array('id'=>$pr_items->item_id),$division_group->division_group_name);
+					$company = $this->prod_assign_m->get_company(array('id' => $division_group->company));
+					$item =  $this->prod_assign_nav_m->get(array('No_'=>$pr_items->pri_item_code),$company->company_name);
+				
 				?>
 					<tr>
 				 	<td><?php echo $pr_items->pr_id;  ?></td>
 				 	<td><?php //print_r($item);
-						echo $item['description'];?></td>
+						echo $item->Description;?></td>
 				 	<td><?php echo $relative_pr->date_created;?></td>
 				 	<td><?php echo $requestor->first_name.' '.$requestor->last_name.' - '.$division_group->division_group_name;?></td>
-					<td><?php  echo anchor('admin/canvass_items/set/' . $pr_items->id, 'Canvass Item', 'class="btn orange"'); ?></td>
+					<td><?php  echo anchor('admin/canvass_items/set/' . $pr_items->pri_id, 'Canvass Item', 'class="btn orange"'); ?></td>
 						<input type="submit" value="assign_item" style="display:none;">
 						
 						
@@ -42,12 +45,8 @@
 			</tbody>
 		</table>
 
-		<div class="table_action_buttons">
-		<?php //$this->load->view('admin/partials/buttons', array('buttons' => array('delete') )); ?>
-		</div>
 
-		<?php //echo form_close(); ?>
 
 	<?php else: ?>
-		<div class="no_data"><?php echo lang('canvassing:no_requisition'); ?></div>
+		<div class="no_data"><?php echo lang('canvassing:no_items'); ?></div>
 	<?php endif; ?>

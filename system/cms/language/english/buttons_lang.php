@@ -14,6 +14,7 @@
 
 $lang['buttons.submit']		= 'Save';
 $lang['buttons.cancel']		= 'Cancel';
+$lang['buttons.back']		= 'Back';
 $lang['buttons.upload']		= 'Upload';
 $lang['buttons.save']		= 'Save';
 $lang['buttons.save_exit']	= 'Save &amp; Exit';
@@ -24,6 +25,8 @@ $lang['buttons.require_changes']	= 'Require Changes';
 $lang['buttons.delete']		= 'Delete';
 $lang['buttons.publish']	= 'Publish';
 $lang['buttons.approve']	= 'Approve';
+$lang['buttons.assign']		= 'Assign';
+$lang['buttons.add_new_canvass']	= 'New Canvass';
 $lang['buttons.unapprove']	= 'Un-approve';
 $lang['buttons.install']	= 'Install';
 $lang['buttons.uninstall']	= 'Uninstall';

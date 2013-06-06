@@ -47,6 +47,11 @@ a:focus { outline: 0; }
 	font-weight: bold;
 	/*background-color: #e5f1ff; */
 }
+
+#blue_highlight
+{
+	background-color: #ebffeb; 
+}
 #red_alert 
 {
 	color: #ff3e3e;

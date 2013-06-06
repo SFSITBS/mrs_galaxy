@@ -20,15 +20,37 @@ class prod_assign_m extends MY_Model
 			
 	}
 
-	public function get_purchasing_officer()
+	public function get_all_purchasing_officer()
 	{
 		return $this->db->select('*')	
 			->where('group_id',5)
 			->get('default_users')
 			->result();
 	}
+	public function get_assigned_purchasing_officer($params)
+	{
+		return $this->db->select('*')	
+			->where($params)
+			->get('default_category_assignment')
+			->result();
+	}
 	
-
+	public function get_company($params)
+	{
+		return $this->db->select('*')	
+			->where($params)
+			->get('default_company')
+			->row();
+	}
+	
+	public function get_category_assignment($params)
+	{
+		if($params) $this->db->where($params);
+		
+		return $this->db->get('default_category_assignment')
+				->result();
+	}
+	
 	public function insert($input = array())
 	{
 		parent::insert(array(
@@ -37,7 +59,7 @@ class prod_assign_m extends MY_Model
 			'description' 			=> $input['description'],
 			'is_stocking' 			=> $input['is_stocking'],
 			'category_code' 		=> $input['category_code'],
-			'cat_name' 					=> $input['cat_name']
+			'cat_name' 				=> $input['cat_name']
 		));
 		
 		return $this->db->insert_id();
@@ -82,7 +104,36 @@ class prod_assign_m extends MY_Model
 	public function get_all_search()
 	{
 		return	$this->db
-		->select('*')
+		->select('default_purchase_request_items.id as pri_id')
+		->select('default_purchase_request_items.pr_id as pri_pr_id')
+		->select('default_purchase_request_items.item_code as pri_item_code')
+		->select('default_purchase_request_items.is_new as pri_is_new')
+		->select('default_purchase_request_items.canvassed_by as pri_canvassed_by')
+		->select('default_purchase_request.id as pr_id')
+		->select('default_purchase_request.status as pr_status')
+		->select('default_purchase_request.date_created as pr_date_created')
+		->select('default_purchase_request.created_by as pr_created_by')
+		->select('default_material_requests.id as mr_id, ')
+		->select('default_material_requests.title as mr_title, ')
+		->select('default_material_requests.narrative as mr_narrative, ')
+		->select('default_material_requests.division as mr_division, ')
+		->select('default_material_requests.division_group as mr_division_group, ')
+		->select('default_material_requests.created as mr_created, ')
+		->select('default_material_requests.submitted as mr_submitted, ')
+		->select('default_material_requests.date_needed as mr_date_needed, ')
+		->select('default_material_requests.requestor as mr_requestor, ')
+		->select('default_material_requests.division_approver as mr_division_approver, ')
+		->select('default_material_requests.division_group_approver as mr_division_group_approver, ')
+		->select('default_material_requests.force_approved as mr_force_approved, ')
+		->select('default_material_requests.date_approved as mr_date_approved, ')
+		->select('default_material_requests.status as mr_status, ')
+		->select('default_material_requests.accounting_cat as mr_accounting_cat, ')
+		->select('default_material_requests.remarks as mr_remarks, ')
+		->select('default_division_groups.id as dg_id')
+		->select('default_division_groups.division_group_name as dg_division_group_name')
+		->select('default_division_groups.approver as dg_approver')
+		->select('default_division_groups.approver_proxy as dg_approver_proxy')
+		->select('default_division_groups.company as dg_company')
 		->from('default_purchase_request_items')
 		->join('default_purchase_request','default_purchase_request.id = default_purchase_request_items.pr_id')
 		->join('default_material_requests','default_material_requests.id = default_purchase_request.mr_id')
@@ -111,11 +162,27 @@ class prod_assign_m extends MY_Model
 		}
 		if (!empty($params['keywords']))
 		{
-			$this->db->where('item_id',$this->prod_assign_nav_m->get_descriptions($params['keywords']));
+			$itemcode= $this->prod_assign_nav_m->get_descriptions(array('LOWER(Description)'=>strtolower($params['keywords'])));
+			$itemcode_no = '';
+			if($itemcode) $itemcode_no = $itemcode->No_;
+			$this->db->where('item_code',$itemcode_no);
 		}
 		if (!empty($params['assigned']))
 		{
 			$this->db->having('canvassed_by is null')->or_having('canvassed_by = \'\'');
+		}
+		if (!empty($params['category']))
+		{	
+			$category= $this->prod_assign_nav_m->get_item_params(array('LOWER([Item Category Code])'=>strtolower($params['category'])));
+			$ctr = 0;
+			foreach($category as $cat)
+			{ 	
+				if($ctr ==0)
+					$this->db->having('item_code = '.$cat->No_);
+				else
+					$this->db->or_having('item_code = '.$cat->No_);
+				$ctr++;
+			}
 		}
 		// Limit the results based on 1 number or 2 (2nd is offset)
 		if (isset($params['limit']) && is_array($params['limit']))

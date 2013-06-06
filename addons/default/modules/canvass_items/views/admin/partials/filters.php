@@ -18,7 +18,7 @@
     		</li>
 			
 			<li>
-				<?php echo lang('canvassing:item_keywords_label', 'f_keywords'); ?>
+				<?php echo lang('canvassing:keywords_label', 'f_keywords'); ?>
 				<?php echo form_input('f_keywords','', 'maxlength="60" id="title" style="width:300px;"'); ?>
 			</li>
 		
